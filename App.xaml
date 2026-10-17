@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Application
+    x:Class="MoxTerm.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <!--
+                终端配色跟随应用主题：Default 键即深色主题。
+                使用 {ThemeResource} 引用，切换主题时会自动重算。
+                实际运行时会被设置页的“终端配色”覆盖，这里只是初始值。
+            -->
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Default">
+                    <SolidColorBrush x:Key="TerminalBackgroundBrush" Color="#0C0C0C" />
+                    <SolidColorBrush x:Key="TerminalForegroundBrush" Color="#CCCCCC" />
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Light">
+                    <SolidColorBrush x:Key="TerminalBackgroundBrush" Color="#FFFFFF" />
+                    <SolidColorBrush x:Key="TerminalForegroundBrush" Color="#1F1F1F" />
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+
+            <!-- 等宽字体：优先 Cascadia Mono，逐级回退 -->
+            <FontFamily x:Key="TerminalFontFamily">Cascadia Mono, Consolas, Courier New</FontFamily>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

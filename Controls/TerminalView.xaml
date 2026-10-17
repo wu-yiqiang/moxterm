@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="MoxTerm.Controls.TerminalView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Margin="12,4,12,12"
+    IsTabStop="True"
+    UseSystemFocusVisuals="False">
+
+    <!-- 背景与前景的默认值来自主题资源，运行时会按配色设置覆盖 -->
+    <Grid x:Name="Surface" Background="{ThemeResource TerminalBackgroundBrush}">
+        <ScrollViewer
+            x:Name="Scroller"
+            HorizontalScrollBarVisibility="Auto"
+            VerticalScrollBarVisibility="Auto"
+            Padding="10,8">
+            <TextBlock
+                x:Name="Screen"
+                FontFamily="{StaticResource TerminalFontFamily}"
+                Foreground="{ThemeResource TerminalForegroundBrush}"
+                IsTextSelectionEnabled="True"
+                TextWrapping="NoWrap" />
+        </ScrollViewer>
+    </Grid>
+</UserControl>

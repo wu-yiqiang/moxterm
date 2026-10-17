@@ -1,0 +1,44 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <RootNamespace>MoxTerm</RootNamespace>
+    <AssemblyName>MoxTerm</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <DefaultLanguage>zh-CN</DefaultLanguage>
+    <UseWinUI>true</UseWinUI>
+    <!-- 非打包（unpackaged）运行：dotnet run 即可启动，无需 MSIX 部署 -->
+    <WindowsPackageType>None</WindowsPackageType>
+    <!-- 应用图标（exe 图标，源自 Assets\AppIcon.svg） -->
+    <ApplicationIcon>Assets\AppIcon.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <!--
+    WinUI 3 需要明确的平台与 RID。这里对 x64 / ARM64 以外的取值做兜底，
+    避免外部环境变量（例如 Platform=saas）污染构建。
+    显式传入 -p:Platform=ARM64 时条件不成立，仍会保留调用方指定的值。
+  -->
+  <PropertyGroup>
+    <Platforms>x64;ARM64</Platforms>
+    <Platform Condition="'$(Platform)' != 'x64' and '$(Platform)' != 'ARM64'">x64</Platform>
+    <RuntimeIdentifier Condition="'$(Platform)' == 'x64'">win-x64</RuntimeIdentifier>
+    <RuntimeIdentifier Condition="'$(Platform)' == 'ARM64'">win-arm64</RuntimeIdentifier>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.250916003" />
+  </ItemGroup>
+
+  <!-- 复制到输出目录，供运行时 AppWindow.SetIcon 设置窗口/任务栏图标、标题栏 Image 使用 -->
+  <ItemGroup>
+    <Content Include="Assets\AppIcon.ico;Assets\AppIcon.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+</Project>
