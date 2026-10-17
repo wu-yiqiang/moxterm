@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="MoxTerm.Views.FeaturePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <ScrollViewer>
+        <StackPanel
+            Padding="36,28,36,36"
+            Spacing="16">
+
+            <!-- 页头：大图标 + 标题 + “即将推出”徽标 -->
+            <StackPanel
+                HorizontalAlignment="Left"
+                Orientation="Horizontal"
+                Spacing="14">
+                <SymbolIcon x:Name="FeatureIcon" RenderTransformOrigin="0.5,0.5">
+                    <SymbolIcon.RenderTransform>
+                        <ScaleTransform ScaleX="1.4" ScaleY="1.4" />
+                    </SymbolIcon.RenderTransform>
+                </SymbolIcon>
+                <TextBlock
+                    x:Name="FeatureTitle"
+                    VerticalAlignment="Center"
+                    Style="{StaticResource TitleTextBlockStyle}" />
+                <Border
+                    Padding="10,3"
+                    VerticalAlignment="Center"
+                    Background="{ThemeResource AccentFillColorTertiaryBrush}"
+                    CornerRadius="10">
+                    <TextBlock
+                        Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
+                        Style="{StaticResource CaptionTextBlockStyle}"
+                        Text="{x:Bind Loc.ComingSoon, Mode=OneWay}" />
+                </Border>
+            </StackPanel>
+
+            <TextBlock
+                x:Name="FeatureDesc"
+                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                TextWrapping="Wrap" />
+
+            <TextBlock
+                Margin="0,8,0,0"
+                Style="{StaticResource BodyStrongTextBlockStyle}"
+                Text="{x:Bind Loc.PlannedFeatures, Mode=OneWay}" />
+
+            <ItemsControl x:Name="FeatureItems">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel
+                            Margin="0,4"
+                            Orientation="Horizontal"
+                            Spacing="10">
+                            <SymbolIcon
+                                VerticalAlignment="Center"
+                                RenderTransformOrigin="0.5,0.5"
+                                Symbol="Accept">
+                                <SymbolIcon.RenderTransform>
+                                    <ScaleTransform ScaleX="0.7" ScaleY="0.7" />
+                                </SymbolIcon.RenderTransform>
+                            </SymbolIcon>
+                            <TextBlock VerticalAlignment="Center" Text="{Binding}" />
+                        </StackPanel>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

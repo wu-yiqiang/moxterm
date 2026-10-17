@@ -214,6 +214,12 @@ public sealed class ConPtyTerminalSession : ITerminalSession
             _pseudoConsole = IntPtr.Zero;
         }
 
+        // 补一刀立即终止：不等 Shell 自行清理，确保下面的等待毫秒级返回，窗口关闭不被拖慢
+        if (_processHandle != IntPtr.Zero)
+        {
+            NativeMethods.TerminateProcess(_processHandle, 0);
+        }
+
         _readerThread?.Join(TimeSpan.FromSeconds(2));
         _exitTask?.Wait(TimeSpan.FromSeconds(2));
 

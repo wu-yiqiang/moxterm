@@ -104,7 +104,7 @@
                             Glyph="World">
                             <ComboBox
                                 x:Name="LanguageComboBox"
-                                MinWidth="180"
+                                Width="200"
                                 SelectionChanged="OnLanguageChanged" />
                         </controls:SettingsRow>
 
@@ -114,7 +114,7 @@
                             Glyph="Setting">
                             <ComboBox
                                 x:Name="ThemeComboBox"
-                                MinWidth="180"
+                                Width="200"
                                 SelectionChanged="OnThemeChanged" />
                         </controls:SettingsRow>
 
@@ -124,7 +124,7 @@
                             Glyph="FontColor">
                             <ComboBox
                                 x:Name="ColorSchemeComboBox"
-                                MinWidth="180"
+                                Width="200"
                                 SelectionChanged="OnColorSchemeChanged" />
                         </controls:SettingsRow>
 
@@ -134,7 +134,7 @@
                             Glyph="Font">
                             <ComboBox
                                 x:Name="FontFamilyComboBox"
-                                MinWidth="180"
+                                Width="200"
                                 SelectionChanged="OnFontFamilyChanged" />
                         </controls:SettingsRow>
 
@@ -144,7 +144,7 @@
                             Glyph="FontSize">
                             <NumberBox
                                 x:Name="FontSizeBox"
-                                MinWidth="180"
+                                Width="200"
                                 Maximum="32"
                                 Minimum="8"
                                 SmallChange="1"
@@ -158,7 +158,7 @@
                             Glyph="List">
                             <NumberBox
                                 x:Name="LineHeightBox"
-                                MinWidth="180"
+                                Width="200"
                                 Maximum="2"
                                 Minimum="1"
                                 SmallChange="0.05"
@@ -181,7 +181,7 @@
                             Glyph="Repair">
                             <ComboBox
                                 x:Name="DefaultShellComboBox"
-                                MinWidth="180"
+                                Width="200"
                                 SelectionChanged="OnDefaultShellChanged" />
                         </controls:SettingsRow>
 
@@ -191,7 +191,7 @@
                             Glyph="Folder">
                             <TextBox
                                 x:Name="WorkingDirectoryBox"
-                                MinWidth="180"
+                                Width="200"
                                 LostFocus="OnWorkingDirectoryLostFocus"
                                 PlaceholderText="{x:Bind Loc.WorkingDirEmpty, Mode=OneWay}" />
                         </controls:SettingsRow>
@@ -202,7 +202,7 @@
                             Glyph="Clock">
                             <NumberBox
                                 x:Name="ScrollbackBox"
-                                MinWidth="180"
+                                Width="200"
                                 Maximum="100000"
                                 Minimum="200"
                                 SmallChange="100"
@@ -216,7 +216,7 @@
                             Glyph="Target">
                             <ComboBox
                                 x:Name="CursorStyleComboBox"
-                                MinWidth="180"
+                                Width="200"
                                 SelectionChanged="OnCursorStyleChanged" />
                         </controls:SettingsRow>
 
@@ -237,7 +237,7 @@
                             Glyph="Library">
                             <ComboBox
                                 x:Name="BackendComboBox"
-                                MinWidth="180"
+                                Width="200"
                                 SelectionChanged="OnBackendChanged" />
                         </controls:SettingsRow>
                     </StackPanel>

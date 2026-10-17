@@ -9,46 +9,13 @@
     NavigationCacheMode="Required">
 
     <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
-
-        <!-- 命令栏：新建会话 / 选择默认 Shell / 清屏 -->
-        <StackPanel
-            Grid.Row="0"
-            Orientation="Horizontal"
-            Spacing="8"
-            Padding="16,12,16,10">
-
-            <Button x:Name="NewSessionButton" Click="OnNewSessionClick" ToolTipService.ToolTip="{x:Bind Loc.NewSession, Mode=OneWay}">
-                <StackPanel Orientation="Horizontal" Spacing="8">
-                    <FontIcon Glyph="&#xE710;" FontSize="14" />
-                    <TextBlock Text="{x:Bind Loc.NewSession, Mode=OneWay}" />
-                </StackPanel>
-            </Button>
-
-            <ComboBox
-                x:Name="ShellComboBox"
-                MinWidth="200"
-                SelectionChanged="OnShellSelectionChanged"
-                ToolTipService.ToolTip="{x:Bind Loc.ShellPickerTip, Mode=OneWay}" />
-
-            <Button x:Name="ClearButton" Click="OnClearClick" ToolTipService.ToolTip="{x:Bind Loc.ClearTip, Mode=OneWay}">
-                <StackPanel Orientation="Horizontal" Spacing="8">
-                    <FontIcon Glyph="&#xE894;" FontSize="14" />
-                    <TextBlock Text="{x:Bind Loc.Clear, Mode=OneWay}" />
-                </StackPanel>
-            </Button>
-        </StackPanel>
-
         <!--
             WinUI 3 的 TabView 没有 IsClosable，关闭能力由每个 TabViewItem 决定，
             这里在创建标签页时统一设为可关闭。
+            加号按钮点击后弹出会话类型菜单（本地 Shell + 远程协议）。
         -->
         <TabView
             x:Name="Tabs"
-            Grid.Row="1"
             AddTabButtonClick="OnAddTabButtonClick"
             AllowDropTabs="True"
             CanReorderTabs="True"

@@ -47,10 +47,12 @@ public sealed class Loc : INotifyPropertyChanged
 
     // 主窗口与终端工具栏
     public string NavTerminal => T("终端", "Terminal");
-    public string NewSession => T("新建会话", "New session");
-    public string ShellPickerTip => T("新建会话使用的 Shell", "Shell used for new sessions");
-    public string Clear => T("清屏", "Clear");
-    public string ClearTip => T("清屏 (Ctrl+L)", "Clear (Ctrl+L)");
+    public string Serial => T("串口 (Serial)", "Serial");
+    public string OK => T("确定", "OK");
+
+    public string ProtocolComingSoon(string protocol) => T(
+        $"{protocol} 会话将在后续版本提供。",
+        $"{protocol} sessions will be available in a future version.");
 
     // 设置页分组
     public string SettingsTitle => T("设置", "Settings");
@@ -140,4 +142,118 @@ public sealed class Loc : INotifyPropertyChanged
         $"剪贴板中包含 {lines} 行文本，确认要粘贴到终端吗？",
         $"The clipboard contains {lines} lines of text. Paste into the terminal?");
     public string PastePrimary => T("粘贴", "Paste");
+
+    // 功能分组导航
+    public string GroupTools => T("工具", "Tools");
+    public string GroupServers => T("服务器", "Servers");
+    public string NavNetServices => T("网络服务", "Network services");
+    public string NavTunneling => T("SSH 隧道（端口转发）", "SSH tunnel (port forwarding)");
+    public string NavKeyGen => T("SSH 密钥生成器", "SSH key generator");
+    public string NavOpenPorts => T("列出开放端口", "List open ports");
+    public string NavWakeOnLan => T("Wake On Lan", "Wake On Lan");
+    public string NavNetScan => T("网络扫描", "Network scanner");
+    public string NavPortScan => T("端口扫描", "Ports scanner");
+    public string NavPacketCapture => T("网络抓包", "Packet capture");
+    public string NavXServer => T("X Server", "X Server");
+    public string ComingSoon => T("即将推出", "Coming soon");
+    public string PlannedFeatures => T("规划中的能力", "Planned capabilities");
+
+    // 网络服务
+    public string FeatureNetServicesDesc => T(
+        "在本地一键启动常用网络服务，便于调试与文件分发。",
+        "Start common network services locally with one click, for debugging and file distribution.");
+    public IReadOnlyList<string> FeatureNetServicesItems =>
+    [
+        T("TFTP / FTP / HTTP 文件服务", "TFTP / FTP / HTTP file services"),
+        T("服务端口与运行状态管理", "Service ports and status management"),
+    ];
+
+    // SSH 密钥生成器
+    public string FeatureKeyGenDesc => T(
+        "生成与管理 SSH 密钥对。",
+        "Generate and manage SSH key pairs.");
+    public IReadOnlyList<string> FeatureKeyGenItems =>
+    [
+        T("RSA / Ed25519 密钥生成", "RSA / Ed25519 key generation"),
+        T("公钥导出（OpenSSH 格式）", "Public key export (OpenSSH format)"),
+        T("私钥口令保护", "Private key passphrase protection"),
+    ];
+
+    // 列出开放端口
+    public string FeatureOpenPortsDesc => T(
+        "查看本机哪些进程正在监听或占用端口。",
+        "See which processes are listening on or using ports.");
+    public IReadOnlyList<string> FeatureOpenPortsItems =>
+    [
+        T("TCP / UDP 监听与连接列表", "TCP / UDP listeners and connections"),
+        T("进程名与 PID 关联", "Process name and PID mapping"),
+        T("按端口或进程过滤", "Filter by port or process"),
+    ];
+
+    // Wake On Lan
+    public string FeatureWakeOnLanDesc => T(
+        "通过魔术包唤醒局域网内的设备。",
+        "Wake devices on the LAN with magic packets.");
+    public IReadOnlyList<string> FeatureWakeOnLanItems =>
+    [
+        T("按 MAC 地址发送唤醒包", "Send wake-up packets by MAC address"),
+        T("常用设备保存", "Save frequently used devices"),
+        T("广播地址与端口自定义", "Custom broadcast address and port"),
+    ];
+
+    // 网络扫描
+    public string FeatureNetScanDesc => T(
+        "扫描网段内的在线主机。",
+        "Discover live hosts on a network segment.");
+    public IReadOnlyList<string> FeatureNetScanItems =>
+    [
+        T("IP 段主机发现", "Live host discovery over an IP range"),
+        T("主机名与 MAC 地址解析", "Hostname and MAC address resolution"),
+        T("结果导出", "Result export"),
+    ];
+
+    // 端口扫描
+    public string FeaturePortScanDesc => T(
+        "探测目标主机开放的端口。",
+        "Probe open ports on a target host.");
+    public IReadOnlyList<string> FeaturePortScanItems =>
+    [
+        T("常见端口快速扫描", "Quick scan of common ports"),
+        T("自定义端口范围", "Custom port ranges"),
+        T("服务 Banner 识别", "Service banner grabbing"),
+    ];
+
+    // 网络抓包
+    public string FeaturePacketCaptureDesc => T(
+        "捕获并查看网络数据包。",
+        "Capture and inspect network packets.");
+    public IReadOnlyList<string> FeaturePacketCaptureItems =>
+    [
+        T("网卡选择与捕获过滤器", "Adapter selection and capture filters"),
+        T("会话列表与十六进制视图", "Session list and hex view"),
+        T("导出 pcap 文件", "Export to pcap files"),
+    ];
+
+    // 隧道转发
+    public string FeatureTunnelDesc => T(
+        "基于 SSH 的加密端口转发，把远程服务安全地映射到本地。",
+        "Encrypted port forwarding over SSH, securely mapping remote services to local ports.");
+    public IReadOnlyList<string> FeatureTunnelItems =>
+    [
+        T("本地（Local）转发", "Local forwarding"),
+        T("远程（Remote）转发", "Remote forwarding"),
+        T("动态 SOCKS 代理", "Dynamic SOCKS proxy"),
+        T("隧道列表与运行状态监控", "Tunnel list with live status"),
+    ];
+
+    // X Server
+    public string FeatureXServerDesc => T(
+        "在 Windows 桌面上显示远程 Linux/Unix 的 X11 图形界面。",
+        "Display remote Linux/Unix X11 graphical applications on the Windows desktop.");
+    public IReadOnlyList<string> FeatureXServerItems =>
+    [
+        T("内嵌 X 服务器，随应用启动", "Built-in X server that starts with the app"),
+        T("与 SSH 会话联动的 X11 转发", "X11 forwarding tied to SSH sessions"),
+        T("多窗口与根窗口（Rooted）模式", "Multi-window and rooted modes"),
+    ];
 }

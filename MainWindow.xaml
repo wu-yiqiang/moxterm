@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Window
     x:Class="MoxTerm.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -28,7 +28,7 @@
             x:Name="NavView"
             Grid.Row="1"
             IsBackButtonVisible="Collapsed"
-            IsSettingsVisible="True"
+            IsSettingsVisible="False"
             IsTitleBarAutoPaddingEnabled="False"
             PaneDisplayMode="Left"
             OpenPaneLength="212"
@@ -40,7 +40,81 @@
                         <FontIcon Glyph="&#xE756;" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
+
+                <NavigationViewItem
+                    Content="{x:Bind Loc.GroupTools, Mode=OneWay}"
+                    SelectsOnInvoked="False">
+                    <NavigationViewItem.Icon>
+                        <SymbolIcon Symbol="Repair" />
+                    </NavigationViewItem.Icon>
+                    <NavigationViewItem.MenuItems>
+                        <NavigationViewItem Content="{x:Bind Loc.NavNetServices, Mode=OneWay}" Tag="netsvc">
+                            <NavigationViewItem.Icon>
+                                <SymbolIcon Symbol="List" />
+                            </NavigationViewItem.Icon>
+                        </NavigationViewItem>
+                        <NavigationViewItem Content="{x:Bind Loc.NavTunneling, Mode=OneWay}" Tag="tunnel">
+                            <NavigationViewItem.Icon>
+                                <SymbolIcon Symbol="Sync" />
+                            </NavigationViewItem.Icon>
+                        </NavigationViewItem>
+                        <NavigationViewItem Content="{x:Bind Loc.NavKeyGen, Mode=OneWay}" Tag="keygen">
+                            <NavigationViewItem.Icon>
+                                <FontIcon Glyph="&#xE8D7;" />
+                            </NavigationViewItem.Icon>
+                        </NavigationViewItem>
+                        <NavigationViewItem Content="{x:Bind Loc.NavOpenPorts, Mode=OneWay}" Tag="netports">
+                            <NavigationViewItem.Icon>
+                                <SymbolIcon Symbol="Target" />
+                            </NavigationViewItem.Icon>
+                        </NavigationViewItem>
+                        <NavigationViewItem Content="{x:Bind Loc.NavWakeOnLan, Mode=OneWay}" Tag="wol">
+                            <NavigationViewItem.Icon>
+                                <SymbolIcon Symbol="Clock" />
+                            </NavigationViewItem.Icon>
+                        </NavigationViewItem>
+                        <NavigationViewItem Content="{x:Bind Loc.NavNetScan, Mode=OneWay}" Tag="netscan">
+                            <NavigationViewItem.Icon>
+                                <SymbolIcon Symbol="Refresh" />
+                            </NavigationViewItem.Icon>
+                        </NavigationViewItem>
+                        <NavigationViewItem Content="{x:Bind Loc.NavPortScan, Mode=OneWay}" Tag="portscan">
+                            <NavigationViewItem.Icon>
+                                <SymbolIcon Symbol="Accept" />
+                            </NavigationViewItem.Icon>
+                        </NavigationViewItem>
+                        <NavigationViewItem Content="{x:Bind Loc.NavPacketCapture, Mode=OneWay}" Tag="pktcap">
+                            <NavigationViewItem.Icon>
+                                <SymbolIcon Symbol="Folder" />
+                            </NavigationViewItem.Icon>
+                        </NavigationViewItem>
+                    </NavigationViewItem.MenuItems>
+                </NavigationViewItem>
+
+                <NavigationViewItem
+                    Content="{x:Bind Loc.GroupServers, Mode=OneWay}"
+                    SelectsOnInvoked="False">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE8AF;" />
+                    </NavigationViewItem.Icon>
+                    <NavigationViewItem.MenuItems>
+                        <NavigationViewItem Content="{x:Bind Loc.NavXServer, Mode=OneWay}" Tag="xserver">
+                            <NavigationViewItem.Icon>
+                                <FontIcon Glyph="&#xE7F4;" />
+                            </NavigationViewItem.Icon>
+                        </NavigationViewItem>
+                    </NavigationViewItem.MenuItems>
+                </NavigationViewItem>
             </NavigationView.MenuItems>
+
+            <!-- 内置设置项只跟随系统语言，这里用自己的底部项以便接入应用内语言 -->
+            <NavigationView.FooterMenuItems>
+                <NavigationViewItem x:Name="SettingsNavItem" Content="设置" Tag="settings">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE713;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+            </NavigationView.FooterMenuItems>
 
             <Frame x:Name="ContentFrame" />
         </NavigationView>

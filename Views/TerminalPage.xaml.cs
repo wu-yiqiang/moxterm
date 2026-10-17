@@ -1,4 +1,4 @@
-using Microsoft.UI.Xaml;
+﻿using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using MoxTerm.Controls;
@@ -27,7 +27,6 @@ public sealed partial class TerminalPage : Page
         InitializeComponent();
         Current = this;
 
-        LoadShells();
         Loaded += OnLoaded;
         Tabs.Loaded += OnTabsLoaded;
     }
@@ -75,44 +74,21 @@ public sealed partial class TerminalPage : Page
         return null;
     }
 
-    private ShellProfile SelectedShell =>
-        ShellComboBox.SelectedItem as ShellProfile ?? ShellProfile.CommandPrompt;
+    /// <summary>默认 Shell：设置页配置的优先，否则取系统发现的第一个。</summary>
+    private static ShellProfile DefaultShell()
+    {
+        var shells = ShellProfile.Discover();
+        return shells.FirstOrDefault(shell => shell.Name == App.Settings.Current.DefaultShell) ?? shells[0];
+    }
 
     /// <summary>
-    /// 把当前设置应用到所有已打开的会话（字号、字体、行高、配色、光标、回滚缓冲），
-    /// 并同步工具栏上的默认 Shell 选择。
+    /// 把当前设置应用到所有已打开的会话（字号、字体、行高、配色、光标、回滚缓冲）。
     /// </summary>
     public void ApplySettings()
     {
         foreach (var view in EnumerateTerminalViews())
         {
             view.ApplySettings(App.Settings.Current);
-        }
-
-        SyncShellSelection();
-    }
-
-    private void LoadShells()
-    {
-        var shells = ShellProfile.Discover();
-        ShellComboBox.ItemsSource = shells;
-        ShellComboBox.DisplayMemberPath = nameof(ShellProfile.Name);
-
-        ShellComboBox.SelectedItem = shells.FirstOrDefault(shell => shell.Name == App.Settings.Current.DefaultShell)
-            ?? shells[0];
-    }
-
-    /// <summary>设置页改动默认 Shell 后，把工具栏的选择同步过去。</summary>
-    private void SyncShellSelection()
-    {
-        var preferred = App.Settings.Current.DefaultShell;
-        var match = ShellComboBox.Items
-            .OfType<ShellProfile>()
-            .FirstOrDefault(shell => shell.Name == preferred);
-
-        if (match is not null && !ReferenceEquals(ShellComboBox.SelectedItem, match))
-        {
-            ShellComboBox.SelectedItem = match;
         }
     }
 
@@ -127,7 +103,7 @@ public sealed partial class TerminalPage : Page
 
         if (Tabs.TabItems.Count == 0)
         {
-            CreateSession(SelectedShell);
+            CreateSession(DefaultShell());
         }
     }
 
@@ -161,9 +137,61 @@ public sealed partial class TerminalPage : Page
         Tabs.SelectedItem = tab;
     }
 
-    private void OnNewSessionClick(object sender, RoutedEventArgs e) => CreateSession(SelectedShell);
+    /// <summary>
+    /// Tab 栏加号：列出全部会话类型供选择——本地 Shell 在前，远程协议（SSH/Telnet/串口）在后。
+    /// </summary>
+    private void OnAddTabButtonClick(TabView sender, object args)
+    {
+        var flyout = new MenuFlyout();
 
-    private void OnAddTabButtonClick(TabView sender, object args) => CreateSession(SelectedShell);
+        foreach (var profile in ShellProfile.Discover())
+        {
+            var item = new MenuFlyoutItem
+            {
+                Text = profile.Name,
+                Icon = new FontIcon { Glyph = "\uE756" },
+            };
+
+            var captured = profile;
+            item.Click += (_, _) => CreateSession(captured);
+            flyout.Items.Add(item);
+        }
+
+        flyout.Items.Add(new MenuFlyoutSeparator());
+
+        AddProtocolItem(flyout, "SSH", "\uE8D7");
+        AddProtocolItem(flyout, "Telnet", "\uE756");
+        AddProtocolItem(flyout, Loc.Serial, "\uE756");
+
+        // 锚定到加号按钮（模板部件名 AddButton），找不到就退到整个 TabView
+        FrameworkElement anchor = FindVisualChild<Button>(Tabs, "AddButton") is { } button ? button : sender;
+        flyout.ShowAt(anchor);
+    }
+
+    /// <summary>远程协议入口：协议实现前统一提示“即将推出”。</summary>
+    private void AddProtocolItem(MenuFlyout flyout, string name, string glyph)
+    {
+        var item = new MenuFlyoutItem
+        {
+            Text = name,
+            Icon = new FontIcon { Glyph = glyph },
+        };
+
+        item.Click += async (_, _) =>
+        {
+            var dialog = new ContentDialog
+            {
+                XamlRoot = XamlRoot,
+                Title = name,
+                Content = Loc.ProtocolComingSoon(name),
+                CloseButtonText = Loc.OK,
+            };
+
+            await dialog.ShowAsync();
+        };
+
+        flyout.Items.Add(item);
+    }
 
     private void OnTabCloseRequested(TabView sender, TabViewTabCloseRequestedEventArgs args)
     {
@@ -180,27 +208,8 @@ public sealed partial class TerminalPage : Page
         // 关掉最后一个标签后自动补一个，保持工作区可用
         if (Tabs.TabItems.Count == 0)
         {
-            CreateSession(SelectedShell);
+            CreateSession(DefaultShell());
         }
-    }
-
-    private void OnClearClick(object sender, RoutedEventArgs e)
-    {
-        if (Tabs.SelectedItem is TabViewItem { Content: TerminalView view })
-        {
-            view.Clear();
-        }
-    }
-
-    private void OnShellSelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        if (ShellComboBox.SelectedItem is not ShellProfile profile)
-        {
-            return;
-        }
-
-        App.Settings.Current.DefaultShell = profile.Name;
-        App.Settings.Save();
     }
 
     private IEnumerable<TerminalView> EnumerateTerminalViews() =>

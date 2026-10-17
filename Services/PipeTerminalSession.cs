@@ -163,18 +163,19 @@ public sealed class PipeTerminalSession : ITerminalSession
         _disposed = true;
         _running = false;
 
-        // 关闭输入管道会让 Shell 读到 EOF 并退出
+        // 关闭输入管道会让 Shell 读到 EOF
         _input?.Dispose();
         _input = null;
 
-        _readerThread?.Join(TimeSpan.FromSeconds(2));
-        _exitTask?.Wait(TimeSpan.FromSeconds(2));
-
-        // Shell 没有因为 EOF 退出时兜底结束它，避免残留进程
+        // 先结束 Shell：进程一退输出管道立即断开，读取线程与退出监听毫秒级返回。
+        // 顺序不能反过来——PowerShell 不因 EOF 自行退出，先等线程会白白拖满超时（关闭窗口要卡好几秒）
         if (_processHandle != IntPtr.Zero)
         {
             NativeMethods.TerminateProcess(_processHandle, 0);
         }
+
+        _readerThread?.Join(TimeSpan.FromSeconds(2));
+        _exitTask?.Wait(TimeSpan.FromSeconds(2));
 
         _output?.Dispose();
         _output = null;
