@@ -88,7 +88,14 @@ public sealed partial class SettingsPage : Page
                 _ => 0,
             };
 
-            ColorSchemeComboBox.SelectedItem = TerminalColorScheme.FromKey(settings.ColorScheme);
+            // 配色默认“跟随主题”（不在下拉列表里）：选中当前主题实际落到的那一个具体方案
+            var schemeKey = settings.ColorScheme;
+            if (schemeKey == TerminalColorScheme.FollowTheme.Key)
+            {
+                schemeKey = TerminalColorScheme.Resolve(schemeKey, ActualTheme).Key;
+            }
+
+            ColorSchemeComboBox.SelectedItem = TerminalColorScheme.FromKey(schemeKey);
             FontFamilyComboBox.SelectedItem = TerminalFont.FromFamily(settings.FontFamily);
             FontSizeBox.Value = settings.FontSize;
             LineHeightBox.Value = settings.LineHeight;
@@ -98,6 +105,8 @@ public sealed partial class SettingsPage : Page
                 shells.FirstOrDefault(shell => shell.Name == settings.DefaultShell) ?? shells.FirstOrDefault();
 
             WorkingDirectoryBox.Text = settings.WorkingDirectory ?? string.Empty;
+            UseParentDirCheckBox.IsChecked = string.IsNullOrEmpty(settings.WorkingDirectory);
+            UpdateWorkingDirectoryState();
             UpdateWorkingDirectoryHint();
 
             ScrollbackBox.Value = settings.ScrollbackLines;
@@ -216,38 +225,124 @@ public sealed partial class SettingsPage : Page
 
     private void OnWorkingDirectoryLostFocus(object sender, RoutedEventArgs e)
     {
-        if (_loading)
+        if (_loading || UseParentDirCheckBox.IsChecked == true)
         {
             return;
         }
 
         var text = WorkingDirectoryBox.Text.Trim();
 
-        // 留空表示沿用进程当前目录；填了不存在的目录则保留输入并提示，不写入设置
-        if (text.Length > 0 && !Directory.Exists(text))
+        // 留空时自动切回“使用父进程目录”；填了不存在的目录则保留输入并提示，不写入设置
+        if (text.Length == 0)
+        {
+            UseParentDirCheckBox.IsChecked = true;
+            return;
+        }
+
+        if (!Directory.Exists(text))
         {
             UpdateWorkingDirectoryHint();
             return;
         }
 
-        App.Settings.Current.WorkingDirectory = text.Length == 0 ? null : text;
+        App.Settings.Current.WorkingDirectory = text;
         UpdateWorkingDirectoryHint();
         ApplyAndSave();
     }
 
+    /// <summary>根据“使用父进程目录”复选框状态联动启用/禁用输入框与浏览按钮。</summary>
+    private void UpdateWorkingDirectoryState()
+    {
+        var useParent = UseParentDirCheckBox.IsChecked == true;
+        WorkingDirectoryBox.IsEnabled = !useParent;
+        BrowseButton.IsEnabled = !useParent;
+    }
+
+    private void OnUseParentDirToggled(object sender, RoutedEventArgs e)
+    {
+        UpdateWorkingDirectoryState();
+
+        if (_loading)
+        {
+            return;
+        }
+
+        if (UseParentDirCheckBox.IsChecked == true)
+        {
+            // 使用父进程目录：清空路径并写入 null
+            WorkingDirectoryBox.Text = string.Empty;
+            App.Settings.Current.WorkingDirectory = null;
+        }
+        else
+        {
+            // 取消勾选：若输入框已有有效目录则写入，否则留空等用户输入
+            var text = WorkingDirectoryBox.Text.Trim();
+            App.Settings.Current.WorkingDirectory =
+                text.Length > 0 && Directory.Exists(text) ? text : null;
+        }
+
+        UpdateWorkingDirectoryHint();
+        ApplyAndSave();
+    }
+
+    /// <summary>折叠/展开起始目录的详细设置区。</summary>
+    private void OnWorkingDirHeaderClick(object sender, RoutedEventArgs e)
+    {
+        var expand = WorkingDirPanel.Visibility == Visibility.Collapsed;
+        WorkingDirPanel.Visibility = expand ? Visibility.Visible : Visibility.Collapsed;
+        WorkingDirChevron.Glyph = expand ? "\uE70E" : "\uE70D"; // 展开上箭头 / 收起下箭头
+    }
+
     private void UpdateWorkingDirectoryHint()
     {
+        if (UseParentDirCheckBox.IsChecked == true)
+        {
+            WorkingDirectorySummary.Text = Loc.UseParentDir;
+            return;
+        }
+
         var text = WorkingDirectoryBox.Text.Trim();
 
         if (text.Length == 0)
         {
-            WorkingDirectoryRow.Description = Loc.WorkingDirEmpty;
+            WorkingDirectorySummary.Text = Loc.WorkingDirEmpty;
             return;
         }
 
-        WorkingDirectoryRow.Description = Directory.Exists(text)
-            ? Loc.WorkingDirValid
+        WorkingDirectorySummary.Text = Directory.Exists(text)
+            ? text
             : Loc.WorkingDirInvalid;
+    }
+
+    /// <summary>打开文件夹选择器，用所选目录填充起始目录输入框并保存。</summary>
+    private async void OnBrowseClick(object sender, RoutedEventArgs e)
+    {
+        if (App.Shell is null)
+        {
+            return;
+        }
+
+        var picker = new Windows.Storage.Pickers.FolderPicker();
+
+        // 非打包应用需要手动把选择器关联到窗口句柄，否则会立即返回 null
+        var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App.Shell);
+        WinRT.Interop.InitializeWithWindow.Initialize(picker, hwnd);
+
+        picker.SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.ComputerFolder;
+        // FolderPicker 仍要求至少一个文件类型过滤器，这是 API 的历史遗留
+        picker.FileTypeFilter.Add("*");
+
+        var folder = await picker.PickSingleFolderAsync();
+        if (folder is null)
+        {
+            return;
+        }
+
+        // 选择了具体目录即意味着不再使用父进程目录；
+        // 先填入路径再取消勾选，OnUseParentDirToggled 会读取有效路径并保存
+        WorkingDirectoryBox.Text = folder.Path;
+        UseParentDirCheckBox.IsChecked = false;
+        UpdateWorkingDirectoryHint();
     }
 
     private void OnScrollbackChanged(NumberBox sender, NumberBoxValueChangedEventArgs args)

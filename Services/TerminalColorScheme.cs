@@ -41,7 +41,6 @@ public sealed record TerminalColorScheme(string Key, string Name, Color Backgrou
     /// <summary>设置界面可选的全部方案。每次访问都重建，让显示名跟随当前界面语言。</summary>
     public static IReadOnlyList<TerminalColorScheme> All =>
     [
-        FollowTheme with { Name = Loc.Instance.SchemeFollow },
         Dark with { Name = Loc.Instance.SchemeDark },
         Light with { Name = Loc.Instance.SchemeLight },
         SolarizedDark,
@@ -49,13 +48,16 @@ public sealed record TerminalColorScheme(string Key, string Name, Color Backgrou
         Green with { Name = Loc.Instance.SchemeGreen },
     ];
 
-    /// <summary>按持久化的标识还原方案，无法识别时回退到“跟随应用主题”。</summary>
+    /// <summary>按持久化的标识还原方案；无法识别（含历史遗留的“跟随主题”）时回退到深色。</summary>
     public static TerminalColorScheme FromKey(string? key) =>
-        All.FirstOrDefault(scheme => scheme.Key == key) ?? FollowTheme;
+        All.FirstOrDefault(scheme => scheme.Key == key) ?? Dark;
 
-    /// <summary>把方案解析成实际配色；“跟随应用主题”按给定主题落到深色或浅色。</summary>
+    /// <summary>
+    /// 把方案解析成实际配色。历史设置里可能还存着“跟随主题”（System），
+    /// 这里继续按主题落到深色或浅色，等下次保存设置时会被具体方案替换掉。
+    /// </summary>
     public static TerminalColorScheme Resolve(string? key, ElementTheme theme) =>
-        string.IsNullOrEmpty(key) || key == FollowTheme.Key
+        key == FollowTheme.Key
             ? (theme == ElementTheme.Light ? Light : Dark)
             : FromKey(key);
 

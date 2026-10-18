@@ -24,14 +24,41 @@
             VerticalContentAlignment="Stretch">
 
             <TabView.Resources>
-                <!--
-                    WinUI 的 ContentControl 内容默认左上对齐而不拉伸，
-                    不显式设为 Stretch 时终端只会按文本高度撑开一条，填不满标签页。
-                -->
-                <Style TargetType="TabViewItem">
-                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                    <Setter Property="VerticalContentAlignment" Value="Stretch" />
-                </Style>
+                <ResourceDictionary>
+                    <!--
+                        WinUI 的 ContentControl 内容默认左上对齐而不拉伸，
+                        不显式设为 Stretch 时终端只会按文本高度撑开一条，填不满标签页。
+                    -->
+                    <Style TargetType="TabViewItem">
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                        <Setter Property="VerticalContentAlignment" Value="Stretch" />
+                        <Setter Property="Padding" Value="0" />
+                    </Style>
+
+                    <!-- 当前标签标注：选中项提亮背景 + 文字全亮，未选中项半透明压暗 -->
+                    <ResourceDictionary.ThemeDictionaries>
+                        <ResourceDictionary x:Key="Dark">
+                            <SolidColorBrush x:Key="TabViewItemHeaderBackgroundSelected" Color="#FF2B2B2B" />
+                            <SolidColorBrush x:Key="TabViewItemHeaderBackgroundSelectedPointerOver" Color="#FF333333" />
+                            <SolidColorBrush x:Key="TabViewItemHeaderBackgroundSelectedPressed" Color="#FF282828" />
+                            <SolidColorBrush x:Key="TabViewItemHeaderBackground" Color="#00FFFFFF" />
+                            <SolidColorBrush x:Key="TabViewItemHeaderBackgroundPointerOver" Color="#14FFFFFF" />
+                            <SolidColorBrush x:Key="TabViewItemHeaderBackgroundPressed" Color="#0AFFFFFF" />
+                            <SolidColorBrush x:Key="TabViewItemHeaderForegroundSelected" Color="#FFFFFFFF" />
+                            <SolidColorBrush x:Key="TabViewItemHeaderForeground" Color="#99FFFFFF" />
+                        </ResourceDictionary>
+                        <ResourceDictionary x:Key="Light">
+                            <SolidColorBrush x:Key="TabViewItemHeaderBackgroundSelected" Color="#FFFFFFFF" />
+                            <SolidColorBrush x:Key="TabViewItemHeaderBackgroundSelectedPointerOver" Color="#FFFAFAFA" />
+                            <SolidColorBrush x:Key="TabViewItemHeaderBackgroundSelectedPressed" Color="#FFF5F5F5" />
+                            <SolidColorBrush x:Key="TabViewItemHeaderBackground" Color="#00FFFFFF" />
+                            <SolidColorBrush x:Key="TabViewItemHeaderBackgroundPointerOver" Color="#14000000" />
+                            <SolidColorBrush x:Key="TabViewItemHeaderBackgroundPressed" Color="#0A000000" />
+                            <SolidColorBrush x:Key="TabViewItemHeaderForegroundSelected" Color="#FF1A1A1A" />
+                            <SolidColorBrush x:Key="TabViewItemHeaderForeground" Color="#8A000000" />
+                        </ResourceDictionary>
+                    </ResourceDictionary.ThemeDictionaries>
+                </ResourceDictionary>
             </TabView.Resources>
         </TabView>
     </Grid>

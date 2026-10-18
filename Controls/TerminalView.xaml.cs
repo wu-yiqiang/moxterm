@@ -71,8 +71,8 @@ public sealed partial class TerminalView : UserControl
     /// <summary>本会话要启动的 Shell。</summary>
     public ShellProfile Profile { get; set; } = ShellProfile.CommandPrompt;
 
-    /// <summary>驱动 Shell 的后端。默认使用兼容性最好的管道后端。</summary>
-    public TerminalBackend Backend { get; set; } = TerminalBackend.Pipe;
+    /// <summary>驱动 Shell 的后端。默认 ConPTY：PowerShell 走 PSReadLine，退格/方向键/补全才完整可用。</summary>
+    public TerminalBackend Backend { get; set; } = TerminalBackend.ConPty;
 
 
     /// <summary>清空屏幕与回滚缓冲。</summary>
@@ -380,7 +380,8 @@ public sealed partial class TerminalView : UserControl
         var sequence = e.Key switch
         {
             VirtualKey.Enter => "\r",
-            VirtualKey.Back => "\b",
+            // ConPTY 走 VT 约定（conhost 把 0x7F 翻译成 VK_BACK）；管道后端用 0x08，cmd 的行编辑器才认
+            VirtualKey.Back => Backend.Kind == TerminalBackendKind.ConPty ? "\x7f" : "\b",
             VirtualKey.Tab => "\t",
             VirtualKey.Escape => "\u001b",
             VirtualKey.Up => "\u001b[A",

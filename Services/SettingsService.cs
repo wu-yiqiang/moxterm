@@ -24,7 +24,10 @@ public sealed class AppSettings
     /// <summary>终端字体族名；<c>null</c> 表示使用内置的默认字体链。</summary>
     public string? FontFamily { get; set; }
 
-    /// <summary>终端配色方案，取值对应 <see cref="TerminalColorScheme.Key"/>。</summary>
+    /// <summary>
+    /// 终端配色方案，取值对应 <see cref="TerminalColorScheme.Key"/>。
+    /// 默认“跟随主题”：系统深色落深色方案、系统浅色落浅色方案；用户改选具体方案后即固定。
+    /// </summary>
     public string ColorScheme { get; set; } = TerminalColorScheme.FollowTheme.Key;
 
     /// <summary>回滚缓冲行数。</summary>
@@ -42,8 +45,11 @@ public sealed class AppSettings
     /// <summary>新会话的起始目录；<c>null</c> 表示沿用进程当前目录。</summary>
     public string? WorkingDirectory { get; set; }
 
-    /// <summary>终端后端，取值对应 <see cref="TerminalBackendKind"/>。</summary>
-    public string Backend { get; set; } = nameof(TerminalBackendKind.Pipe);
+    /// <summary>
+    /// 终端后端，取值对应 <see cref="TerminalBackendKind"/>。
+    /// 默认 ConPTY：管道模式下 PowerShell 用不了 PSReadLine（退格/方向键失效），仅作旧系统兼容兜底。
+    /// </summary>
+    public string Backend { get; set; } = nameof(TerminalBackendKind.ConPty);
 
     /// <summary>粘贴含换行的内容前是否弹窗确认。</summary>
     public bool ConfirmMultilinePaste { get; set; } = true;

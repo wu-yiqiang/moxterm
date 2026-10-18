@@ -186,17 +186,6 @@
                         </controls:SettingsRow>
 
                         <controls:SettingsRow
-                            x:Name="WorkingDirectoryRow"
-                            Title="{x:Bind Loc.WorkingDir, Mode=OneWay}"
-                            Glyph="Folder">
-                            <TextBox
-                                x:Name="WorkingDirectoryBox"
-                                Width="200"
-                                LostFocus="OnWorkingDirectoryLostFocus"
-                                PlaceholderText="{x:Bind Loc.WorkingDirEmpty, Mode=OneWay}" />
-                        </controls:SettingsRow>
-
-                        <controls:SettingsRow
                             Title="{x:Bind Loc.Scrollback, Mode=OneWay}"
                             Description="{x:Bind Loc.ScrollbackDesc, Mode=OneWay}"
                             Glyph="Clock">
@@ -241,6 +230,95 @@
                                 SelectionChanged="OnBackendChanged" />
                         </controls:SettingsRow>
                     </StackPanel>
+                </Border>
+
+                <!-- 起始目录：独立折叠卡片，展开后内容区带次级底色与分割线 -->
+                <Border Style="{StaticResource SettingsCardStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <Button
+                            Grid.Row="0"
+                            Padding="0"
+                            HorizontalContentAlignment="Stretch"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Click="OnWorkingDirHeaderClick">
+                            <Grid
+                                MinHeight="68"
+                                Padding="20,12,16,12"
+                                ColumnSpacing="18">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <SymbolIcon
+                                    Grid.Column="0"
+                                    Width="20"
+                                    HorizontalAlignment="Center"
+                                    Symbol="Folder"
+                                    VerticalAlignment="Center" />
+
+                                <StackPanel
+                                    Grid.Column="1"
+                                    VerticalAlignment="Center"
+                                    Spacing="2">
+                                    <TextBlock
+                                        Style="{StaticResource BodyStrongTextBlockStyle}"
+                                        Text="{x:Bind Loc.WorkingDir, Mode=OneWay}"
+                                        TextWrapping="Wrap" />
+                                    <TextBlock
+                                        x:Name="WorkingDirectorySummary"
+                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                        Style="{StaticResource CaptionTextBlockStyle}"
+                                        TextWrapping="Wrap" />
+                                </StackPanel>
+
+                                <FontIcon
+                                    x:Name="WorkingDirChevron"
+                                    Grid.Column="2"
+                                    VerticalAlignment="Center"
+                                    FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                                    FontSize="14"
+                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                    Glyph="&#xE70D;" />
+                            </Grid>
+                        </Button>
+
+                        <Border
+                            x:Name="WorkingDirPanel"
+                            Grid.Row="1"
+                            Padding="58,16,20,16"
+                            Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                            BorderThickness="0,1,0,0"
+                            CornerRadius="0,0,7,7"
+                            Visibility="Collapsed">
+                            <StackPanel Spacing="10">
+                                <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                    <TextBox
+                                        x:Name="WorkingDirectoryBox"
+                                        Width="200"
+                                        LostFocus="OnWorkingDirectoryLostFocus"
+                                        PlaceholderText="{x:Bind Loc.WorkingDirEmpty, Mode=OneWay}" />
+                                    <Button
+                                        x:Name="BrowseButton"
+                                        Click="OnBrowseClick"
+                                        Content="{x:Bind Loc.Browse, Mode=OneWay}" />
+                                </StackPanel>
+                                <CheckBox
+                                    x:Name="UseParentDirCheckBox"
+                                    Checked="OnUseParentDirToggled"
+                                    Content="{x:Bind Loc.UseParentDir, Mode=OneWay}"
+                                    Unchecked="OnUseParentDirToggled" />
+                            </StackPanel>
+                        </Border>
+                    </Grid>
                 </Border>
             </StackPanel>
 

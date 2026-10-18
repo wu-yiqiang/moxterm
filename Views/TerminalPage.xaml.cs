@@ -1,4 +1,4 @@
-﻿using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using MoxTerm.Controls;
@@ -90,6 +90,14 @@ public sealed partial class TerminalPage : Page
         {
             view.ApplySettings(App.Settings.Current);
         }
+
+        // 活动标签底色跟随终端配色，与下方内容连成一体（Windows Terminal 风格）；
+        // 未选中标签保持透明（透出 Mica），自然形成明暗对比
+        var selected = new SolidColorBrush(
+            TerminalColorScheme.Resolve(App.Settings.Current.ColorScheme, ActualTheme).Background);
+        Tabs.Resources["TabViewItemHeaderBackgroundSelected"] = selected;
+        Tabs.Resources["TabViewItemHeaderBackgroundSelectedPointerOver"] = selected;
+        Tabs.Resources["TabViewItemHeaderBackgroundSelectedPressed"] = selected;
     }
 
     private void OnLoaded(object sender, RoutedEventArgs e)
@@ -105,6 +113,10 @@ public sealed partial class TerminalPage : Page
         {
             CreateSession(DefaultShell());
         }
+
+        // 启动时也要同步一次设置：活动标签的配色画刷在这里赋值，
+        // 不调用的话只有 XAML 兜底色（与 Mica 相近，看起来像没标注）
+        ApplySettings();
     }
 
     private void OnWindowClosed(object sender, WindowEventArgs args)
