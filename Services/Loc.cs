@@ -47,12 +47,42 @@ public sealed class Loc : INotifyPropertyChanged
 
     // 主窗口与终端工具栏
     public string NavTerminal => T("终端", "Terminal");
-    public string Serial => T("串口 (Serial)", "Serial");
-    public string OK => T("确定", "OK");
 
     public string ProtocolComingSoon(string protocol) => T(
         $"{protocol} 会话将在后续版本提供。",
         $"{protocol} sessions will be available in a future version.");
+
+    // 新建连接对话框
+    public string NewConnection => T("新建连接", "New connection");
+    public string Protocol => T("协议", "Protocol");
+    public string SshNameLabel => T("名称", "Name");
+    public string SshNamePlaceholder => T("可选，默认 SSH: 主机", "Optional, defaults to SSH: host");
+    public string SshHostLabel => T("主机", "Host");
+    public string SshHostPlaceholder => T("主机名或 IP", "hostname or IP");
+    public string SshPortLabel => T("端口", "Port");
+    public string SshUsernameLabel => T("用户名", "Username");
+    public string SshUsernamePlaceholder => T("可选", "Optional");
+    public string SshPasswordLabel => T("密码", "Password");
+    public string SshNotesLabel => T("备注", "Notes");
+    public string Connect => T("连接", "Connect");
+    public string SshSaveSession => T("保存此会话", "Save this session");
+
+    // 已保存会话的编辑与删除
+    public string EditSession => T("编辑", "Edit");
+    public string EditConnection => T("编辑连接", "Edit connection");
+    public string DeleteSession => T("删除", "Delete");
+    public string SaveChanges => T("保存", "Save");
+    public string DeleteSessionConfirm(string name) => T(
+        $"确定删除会话“{name}”吗？",
+        $"Delete session \"{name}\"?");
+
+    // 新建连接：串口等非 SSH 协议的字段
+    public string SerialPortLabel => T("串口", "Serial port");
+    public string SerialPortPlaceholder => T("例如 COM3", "e.g. COM3");
+    public string BaudRateLabel => T("波特率", "Baud rate");
+    public string ConnectionFailed(string target, string message) => T(
+        $"无法连接到 {target}：{message}",
+        $"Failed to connect to {target}: {message}");
 
     // 设置页分组
     public string SettingsTitle => T("设置", "Settings");
@@ -84,7 +114,6 @@ public sealed class Loc : INotifyPropertyChanged
     public string DefaultShellDesc => T("新建会话时使用的 Shell", "Shell used for new sessions");
     public string WorkingDir => T("起始目录", "Working directory");
     public string WorkingDirEmpty => T("留空则使用进程当前目录。", "Leave empty to use the current process directory.");
-    public string WorkingDirValid => T("目录存在，新建会话将在此目录启动。", "Directory exists; new sessions will start here.");
     public string WorkingDirInvalid => T("目录不存在，不会被保存。", "Directory doesn't exist and won't be saved.");
     public string Browse => T("浏览", "Browse");
     public string UseParentDir => T("使用父进程目录", "Use parent process directory");
@@ -103,11 +132,6 @@ public sealed class Loc : INotifyPropertyChanged
         "Ask before pasting text containing newlines, to avoid running multi-line commands by mistake");
 
     // 关于
-    public string Reset => T("恢复默认设置", "Reset to defaults");
-    public string ResetDesc => T("将所有设置恢复为默认值", "Restore all settings to default values");
-    public string ResetDialogContent => T(
-        "所有设置都会恢复为默认值，确定继续吗？",
-        "All settings will be restored to default values. Continue?");
     public string Cancel => T("取消", "Cancel");
 
     public string AboutVersion(string version) => T(

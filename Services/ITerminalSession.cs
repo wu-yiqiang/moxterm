@@ -1,7 +1,7 @@
 namespace MoxTerm.Services;
 
 /// <summary>
-/// 一个终端会话（当前由 ConPTY 实现）。
+/// 一个终端会话（本地进程 / Telnet / 串口）。
 /// </summary>
 public interface ITerminalSession : IDisposable
 {
@@ -10,12 +10,6 @@ public interface ITerminalSession : IDisposable
 
     /// <summary>Shell 进程退出。</summary>
     event EventHandler<int>? Exited;
-
-    /// <summary>会话是否仍在运行。</summary>
-    bool IsRunning { get; }
-
-    /// <summary>子进程 ID，未启动时为 0。</summary>
-    int ProcessId { get; }
 
     /// <summary>按指定终端尺寸启动 Shell。</summary>
     void Start(ShellProfile profile, int columns, int rows);

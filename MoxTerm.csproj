@@ -32,6 +32,10 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.250916003" />
+    <!-- SSH 密码用 DPAPI（当前用户）加密存储 -->
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.0" />
+    <!-- 串口（Serial）会话 -->
+    <PackageReference Include="System.IO.Ports" Version="10.0.0" />
   </ItemGroup>
 
   <!-- 复制到输出目录，供运行时 AppWindow.SetIcon 设置窗口/任务栏图标、标题栏 Image 使用 -->

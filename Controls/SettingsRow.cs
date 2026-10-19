@@ -19,6 +19,17 @@ public sealed class SettingsRow : ContentControl
         typeof(SettingsRow),
         new PropertyMetadata(Symbol.Setting));
 
+    /// <summary>
+    /// 以 Segoe Fluent 字形码覆盖 <see cref="Glyph"/> 的图标。
+    /// WinUI 的 Symbol 枚举不含部分系统图标（如 0xE8C1 Locale Language），
+    /// 而 SymbolIcon 对枚举外的取值会在运行时直接崩溃，这类图标用 <see cref="FontIcon"/> 渲染。
+    /// </summary>
+    public static readonly DependencyProperty GlyphCodeProperty = DependencyProperty.Register(
+        nameof(GlyphCode),
+        typeof(string),
+        typeof(SettingsRow),
+        new PropertyMetadata(string.Empty));
+
     /// <summary>主标题。</summary>
     public static readonly DependencyProperty TitleProperty = DependencyProperty.Register(
         nameof(Title),
@@ -49,6 +60,12 @@ public sealed class SettingsRow : ContentControl
         set => SetValue(GlyphProperty, value);
     }
 
+    public string GlyphCode
+    {
+        get => (string)GetValue(GlyphCodeProperty);
+        set => SetValue(GlyphCodeProperty, value);
+    }
+
     public string Title
     {
         get => (string)GetValue(TitleProperty);
@@ -65,5 +82,27 @@ public sealed class SettingsRow : ContentControl
     {
         get => (Visibility)GetValue(DividerVisibilityProperty);
         set => SetValue(DividerVisibilityProperty, value);
+    }
+
+    protected override void OnApplyTemplate()
+    {
+        base.OnApplyTemplate();
+
+        if (string.IsNullOrEmpty(GlyphCode)
+            || GetTemplateChild("GlyphIcon") is not SymbolIcon symbol
+            || symbol.Parent is not Panel panel)
+        {
+            return;
+        }
+
+        var fontIcon = new FontIcon
+        {
+            Glyph = GlyphCode,
+            Width = symbol.Width,
+            HorizontalAlignment = symbol.HorizontalAlignment,
+            VerticalAlignment = symbol.VerticalAlignment,
+        };
+
+        panel.Children[panel.Children.IndexOf(symbol)] = fontIcon;
     }
 }

@@ -12,7 +12,7 @@
         <!--
             WinUI 3 的 TabView 没有 IsClosable，关闭能力由每个 TabViewItem 决定，
             这里在创建标签页时统一设为可关闭。
-            加号按钮点击后弹出会话类型菜单（本地 Shell + 远程协议）。
+            加号按钮点击后弹出会话菜单（本地 Shell + 已保存会话 + 新建连接）。
         -->
         <TabView
             x:Name="Tabs"
@@ -21,6 +21,7 @@
             CanReorderTabs="True"
             HorizontalContentAlignment="Stretch"
             TabCloseRequested="OnTabCloseRequested"
+            VerticalAlignment="Stretch"
             VerticalContentAlignment="Stretch">
 
             <TabView.Resources>

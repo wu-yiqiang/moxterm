@@ -35,10 +35,11 @@ public sealed partial class TerminalView : UserControl
     private ITerminalSession? _session;
     private bool _started;
     private bool _renderPending;
+    private bool _passwordSent;
+    private bool _usernameSent;
     private double _fontSize = 14;
     private double _lineHeightFactor = 1.0;
     private double _cellWidth = 8;
-    private double _cellHeight = 18;
     private double _lineHeight = 18;
     private bool _cursorBlink = true;
     private bool _blinkOn = true;
@@ -186,7 +187,13 @@ public sealed partial class TerminalView : UserControl
     {
         var profile = ResolveProfile();
 
-        _session = Backend.CreateSession();
+        // Telnet / 串口由各自的会话类直连对端，其余走本地进程（ConPTY / 管道）
+        _session = profile.Transport switch
+        {
+            SessionTransport.Telnet => new TelnetTerminalSession(),
+            SessionTransport.Serial => new SerialTerminalSession(),
+            _ => Backend.CreateSession(),
+        };
         _session.OutputReceived += OnSessionOutput;
         _session.Exited += OnSessionExited;
 
@@ -223,9 +230,47 @@ public sealed partial class TerminalView : UserControl
         DispatcherQueue.TryEnqueue(() =>
         {
             _emulator.Feed(text);
+            TryAutoFillCredentials(text);
             _renderPending = true;
         });
     }
+
+    /// <summary>
+    /// 已保存账号密码时自动响应对端的登录提示：OpenSSH 不支持从命令行传密码，
+    /// FTP 又会先问用户名，都只能走终端交互。每项每个会话只回填一次；
+    /// 输错时对端会再次提示，由用户手动输入。
+    /// </summary>
+    private void TryAutoFillCredentials(string chunk)
+    {
+        if (_session is null)
+        {
+            return;
+        }
+
+        if (!_usernameSent && Profile.Username is { Length: > 0 } username && IsUsernamePrompt(chunk))
+        {
+            _usernameSent = true;
+            _session.Write(username + "\r");
+        }
+
+        if (!_passwordSent && Profile.Password is { Length: > 0 } password && IsPasswordPrompt(chunk))
+        {
+            _passwordSent = true;
+            _session.Write(password + "\r");
+        }
+    }
+
+    private static bool IsPasswordPrompt(string chunk) =>
+        chunk.Contains("password:", StringComparison.OrdinalIgnoreCase) || chunk.Contains("密码");
+
+    /// <summary>覆盖 ssh 之外的常见问法：FTP 的 <c>User (host:(none)):</c>、login as、login:。</summary>
+    private static bool IsUsernamePrompt(string chunk) =>
+        chunk.Contains("user (", StringComparison.OrdinalIgnoreCase)
+        || chunk.Contains("username", StringComparison.OrdinalIgnoreCase)
+        || chunk.Contains("login as", StringComparison.OrdinalIgnoreCase)
+        || chunk.Contains("login:", StringComparison.OrdinalIgnoreCase)
+        || chunk.Contains("用户名")
+        || chunk.Contains("登录");
 
     private void OnSessionExited(object? sender, int exitCode)
     {
@@ -296,6 +341,9 @@ public sealed partial class TerminalView : UserControl
     {
         const int sampleLength = 20;
 
+        // 字符高度量不出来时的兜底值，与字段初始默认一致
+        var cellHeight = 18.0;
+
         var probe = new TextBlock
         {
             FontFamily = Screen.FontFamily,
@@ -312,11 +360,11 @@ public sealed partial class TerminalView : UserControl
 
         if (probe.DesiredSize.Height > 0)
         {
-            _cellHeight = Math.Ceiling(probe.DesiredSize.Height);
+            cellHeight = Math.Ceiling(probe.DesiredSize.Height);
         }
 
         // 行高按倍数放大后再取整，保证渲染出的行距与行列数换算一致
-        _lineHeight = Math.Ceiling(_cellHeight * _lineHeightFactor);
+        _lineHeight = Math.Ceiling(cellHeight * _lineHeightFactor);
         Screen.LineHeight = _lineHeight;
     }
 
@@ -366,7 +414,9 @@ public sealed partial class TerminalView : UserControl
 
         if (control && e.Key == VirtualKey.L)
         {
-            Clear();
+            // 清屏是 shell（PSReadLine/readline）的功能，转发 0x0C 由它清屏并重绘提示符；
+            // 只清本地缓冲区的话 shell 不知道屏幕已清，不会再画提示符
+            _session?.Write("\u000c");
             e.Handled = true;
             return;
         }
@@ -377,11 +427,16 @@ public sealed partial class TerminalView : UserControl
             return;
         }
 
+        // 本地进程的管道后端要发 0x08（cmd 的行编辑器才认）；
+        // ConPTY 与 Telnet / 串口都按 VT 约定发 0x7F
+        var backspace = Profile.Transport == SessionTransport.Process && Backend.Kind != TerminalBackendKind.ConPty
+            ? "\b"
+            : "\x7f";
+
         var sequence = e.Key switch
         {
             VirtualKey.Enter => "\r",
-            // ConPTY 走 VT 约定（conhost 把 0x7F 翻译成 VK_BACK）；管道后端用 0x08，cmd 的行编辑器才认
-            VirtualKey.Back => Backend.Kind == TerminalBackendKind.ConPty ? "\x7f" : "\b",
+            VirtualKey.Back => backspace,
             VirtualKey.Tab => "\t",
             VirtualKey.Escape => "\u001b",
             VirtualKey.Up => "\u001b[A",

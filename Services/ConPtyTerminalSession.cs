@@ -1,7 +1,5 @@
 using System.ComponentModel;
 using System.Runtime.InteropServices;
-using System.Text;
-using Microsoft.Win32.SafeHandles;
 
 namespace MoxTerm.Services;
 
@@ -9,58 +7,32 @@ namespace MoxTerm.Services;
 /// 基于 Windows 伪控制台（ConPTY）的终端会话实现。
 /// 通过一对匿名管道与 <c>CreatePseudoConsole</c> 通信，子进程以普通控制台程序方式运行。
 /// </summary>
-public sealed class ConPtyTerminalSession : ITerminalSession
+public sealed class ConPtyTerminalSession : ProcessTerminalSession
 {
     private IntPtr _pseudoConsole = IntPtr.Zero;
-    private IntPtr _processHandle = IntPtr.Zero;
-    private IntPtr _threadHandle = IntPtr.Zero;
-    private FileStream? _input;
-    private FileStream? _output;
-    private Thread? _readerThread;
-    private Task? _exitTask;
-    private volatile bool _running;
-    private bool _disposed;
 
-    public event EventHandler<string>? OutputReceived;
-
-    public event EventHandler<int>? Exited;
-
-    public bool IsRunning => _running;
-
-    public int ProcessId { get; private set; }
-
-    public void Start(ShellProfile profile, int columns, int rows)
+    public override void Start(ShellProfile profile, int columns, int rows)
     {
-        ObjectDisposedException.ThrowIf(_disposed, this);
-        ArgumentNullException.ThrowIfNull(profile);
-
-        if (_running)
-        {
-            throw new InvalidOperationException("该会话已经启动。");
-        }
+        ValidateStart(profile);
 
         columns = Math.Clamp(columns, 1, 1000);
         rows = Math.Clamp(rows, 1, 1000);
 
         var size = new NativeMethods.COORD((short)columns, (short)rows);
-        var inheritable = new NativeMethods.SECURITY_ATTRIBUTES
-        {
-            nLength = Marshal.SizeOf<NativeMethods.SECURITY_ATTRIBUTES>(),
-            lpSecurityDescriptor = IntPtr.Zero,
-            bInheritHandle = 1,
-        };
 
         // consoleInput  -> ConPTY 读，clientInput  -> 我们写
-        if (!NativeMethods.CreatePipe(out var consoleInput, out var clientInput, ref inheritable, 0))
-        {
-            throw new Win32Exception(Marshal.GetLastWin32Error(), "创建 ConPTY 输入管道失败。");
-        }
+        var (consoleInput, clientInput) = CreatePipePair("创建 ConPTY 输入管道失败。");
+        IntPtr clientOutput, consoleOutput;
 
-        // clientOutput -> 我们读，consoleOutput -> ConPTY 写
-        if (!NativeMethods.CreatePipe(out var clientOutput, out var consoleOutput, ref inheritable, 0))
+        try
+        {
+            // clientOutput -> 我们读，consoleOutput -> ConPTY 写
+            (clientOutput, consoleOutput) = CreatePipePair("创建 ConPTY 输出管道失败。");
+        }
+        catch
         {
             CloseHandles(consoleInput, clientInput);
-            throw new Win32Exception(Marshal.GetLastWin32Error(), "创建 ConPTY 输出管道失败。");
+            throw;
         }
 
         var pseudoConsole = IntPtr.Zero;
@@ -111,24 +83,7 @@ public sealed class ConPtyTerminalSession : ITerminalSession
 
             startupInfo.lpAttributeList = attributeList;
 
-            if (!NativeMethods.CreateProcess(
-                    null,
-                    BuildCommandLine(profile),
-                    IntPtr.Zero,
-                    IntPtr.Zero,
-                    bInheritHandles: true,
-                    NativeMethods.EXTENDED_STARTUPINFO_PRESENT,
-                    IntPtr.Zero,
-                    profile.WorkingDirectory ?? Environment.CurrentDirectory,
-                    ref startupInfo,
-                    out var processInformation))
-            {
-                throw new Win32Exception(Marshal.GetLastWin32Error(), $"启动 {profile.Name} 失败。");
-            }
-
-            _processHandle = processInformation.hProcess;
-            _threadHandle = processInformation.hThread;
-            ProcessId = processInformation.dwProcessId;
+            SpawnProcess(profile, NativeMethods.EXTENDED_STARTUPINFO_PRESENT, ref startupInfo);
 
             // 所有权转移给实例字段，由 Dispose 负责关闭
             _pseudoConsole = pseudoConsole;
@@ -152,39 +107,10 @@ public sealed class ConPtyTerminalSession : ITerminalSession
             }
         }
 
-        _input = new FileStream(new SafeFileHandle(clientInput, ownsHandle: true), FileAccess.Write, bufferSize: 1);
-        _output = new FileStream(new SafeFileHandle(clientOutput, ownsHandle: true), FileAccess.Read, bufferSize: 1);
-
-        _running = true;
-        _readerThread = new Thread(ReadLoop)
-        {
-            IsBackground = true,
-            Name = "MoxTerm.ConPTY.Reader",
-        };
-        _readerThread.Start();
-        _exitTask = Task.Run(WaitForExit);
+        RunSession(clientInput, clientOutput, "MoxTerm.ConPTY.Reader");
     }
 
-    public void Write(string text)
-    {
-        if (!_running || string.IsNullOrEmpty(text) || _input is null)
-        {
-            return;
-        }
-
-        try
-        {
-            var bytes = Encoding.UTF8.GetBytes(text);
-            _input.Write(bytes, 0, bytes.Length);
-            _input.Flush();
-        }
-        catch (Exception ex) when (ex is IOException or ObjectDisposedException)
-        {
-            // Shell 已退出，输入被丢弃即可
-        }
-    }
-
-    public void Resize(int columns, int rows)
+    public override void Resize(int columns, int rows)
     {
         if (_pseudoConsole == IntPtr.Zero)
         {
@@ -197,121 +123,13 @@ public sealed class ConPtyTerminalSession : ITerminalSession
         NativeMethods.ResizePseudoConsole(_pseudoConsole, new NativeMethods.COORD((short)columns, (short)rows));
     }
 
-    public void Dispose()
+    protected override void BeforeTerminate()
     {
-        if (_disposed)
-        {
-            return;
-        }
-
-        _disposed = true;
-        _running = false;
-
         // 关闭伪控制台会让 Shell 进程终止、输出管道断开，读取线程随之退出
         if (_pseudoConsole != IntPtr.Zero)
         {
             NativeMethods.ClosePseudoConsole(_pseudoConsole);
             _pseudoConsole = IntPtr.Zero;
         }
-
-        // 补一刀立即终止：不等 Shell 自行清理，确保下面的等待毫秒级返回，窗口关闭不被拖慢
-        if (_processHandle != IntPtr.Zero)
-        {
-            NativeMethods.TerminateProcess(_processHandle, 0);
-        }
-
-        _readerThread?.Join(TimeSpan.FromSeconds(2));
-        _exitTask?.Wait(TimeSpan.FromSeconds(2));
-
-        _input?.Dispose();
-        _output?.Dispose();
-        _input = null;
-        _output = null;
-
-        CloseHandles(_processHandle, _threadHandle);
-        _processHandle = IntPtr.Zero;
-        _threadHandle = IntPtr.Zero;
-    }
-
-    private static string BuildCommandLine(ShellProfile profile) =>
-        string.IsNullOrWhiteSpace(profile.Arguments)
-            ? $"\"{profile.Executable}\""
-            : $"\"{profile.Executable}\" {profile.Arguments}";
-
-    private static void CloseHandles(params IntPtr[] handles)
-    {
-        foreach (var handle in handles)
-        {
-            if (handle != IntPtr.Zero)
-            {
-                NativeMethods.CloseHandle(handle);
-            }
-        }
-    }
-
-    /// <summary>
-    /// 读取管道并解码成文本。ConPTY 固定输出 UTF-8，
-    /// 这里用 <see cref="Decoder"/> 保持跨块的多字节字符不被打断。
-    /// </summary>
-    private void ReadLoop()
-    {
-        var output = _output;
-        if (output is null)
-        {
-            return;
-        }
-
-        var buffer = new byte[8192];
-        var characters = new char[Encoding.UTF8.GetMaxCharCount(buffer.Length)];
-        var decoder = Encoding.UTF8.GetDecoder();
-
-        try
-        {
-            while (true)
-            {
-                var read = output.Read(buffer, 0, buffer.Length);
-                if (read <= 0)
-                {
-                    break;
-                }
-
-                var count = decoder.GetChars(buffer, 0, read, characters, 0, flush: false);
-                if (count > 0)
-                {
-                    OutputReceived?.Invoke(this, new string(characters, 0, count));
-                }
-            }
-
-            // 冲掉末尾不完整的多字节序列
-            var tail = decoder.GetChars(Array.Empty<byte>(), 0, 0, characters, 0, flush: true);
-            if (tail > 0)
-            {
-                OutputReceived?.Invoke(this, new string(characters, 0, tail));
-            }
-        }
-        catch (Exception ex) when (ex is IOException or ObjectDisposedException or OperationCanceledException or UnauthorizedAccessException)
-        {
-            // 会话被释放或 Shell 退出，读取循环正常结束
-        }
-    }
-
-    private void WaitForExit()
-    {
-        var handle = _processHandle;
-        if (handle == IntPtr.Zero)
-        {
-            return;
-        }
-
-        NativeMethods.WaitForSingleObject(handle, NativeMethods.INFINITE);
-
-        var exitCode = 0;
-        if (NativeMethods.GetExitCodeProcess(handle, out var code))
-        {
-            exitCode = unchecked((int)code);
-        }
-
-        _running = false;
-        Exited?.Invoke(this, exitCode);
     }
 }

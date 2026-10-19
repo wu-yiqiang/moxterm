@@ -1,7 +1,5 @@
-using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Text;
-using Microsoft.Win32.SafeHandles;
 
 namespace MoxTerm.Services;
 
@@ -17,59 +15,30 @@ namespace MoxTerm.Services;
 /// 输出编码跟随系统 OEM 代码页（中文系统为 936），而不是 UTF-8。
 /// </para>
 /// </summary>
-public sealed class PipeTerminalSession : ITerminalSession
+public sealed class PipeTerminalSession : ProcessTerminalSession
 {
     private const uint STARTF_USESTDHANDLES = 0x00000100;
 
     /// <summary>OEM 代码页只解析一次；<see cref="CodePagesEncodingProvider"/> 在 .NET 10 中已内置。</summary>
     private static readonly Lazy<Encoding> ConsoleEncoding = new(ResolveEncoding, LazyThreadSafetyMode.ExecutionAndPublication);
 
-    private FileStream? _input;
-    private FileStream? _output;
-    private IntPtr _processHandle = IntPtr.Zero;
-    private IntPtr _threadHandle = IntPtr.Zero;
-    private Thread? _readerThread;
-    private Task? _exitTask;
-    private Encoding _encoding = Encoding.UTF8;
-    private volatile bool _running;
-    private bool _disposed;
-
-    public event EventHandler<string>? OutputReceived;
-
-    public event EventHandler<int>? Exited;
-
-    public bool IsRunning => _running;
-
-    public int ProcessId { get; private set; }
-
-    public void Start(ShellProfile profile, int columns, int rows)
+    public override void Start(ShellProfile profile, int columns, int rows)
     {
-        ObjectDisposedException.ThrowIf(_disposed, this);
-        ArgumentNullException.ThrowIfNull(profile);
+        ValidateStart(profile);
 
-        if (_running)
+        SessionEncoding = ConsoleEncoding.Value;
+
+        var (stdinRead, stdinWrite) = CreatePipePair("创建标准输入管道失败。");
+        IntPtr stdoutRead, stdoutWrite;
+
+        try
         {
-            throw new InvalidOperationException("该会话已经启动。");
+            (stdoutRead, stdoutWrite) = CreatePipePair("创建标准输出管道失败。");
         }
-
-        _encoding = ConsoleEncoding.Value;
-
-        var inheritable = new NativeMethods.SECURITY_ATTRIBUTES
-        {
-            nLength = Marshal.SizeOf<NativeMethods.SECURITY_ATTRIBUTES>(),
-            lpSecurityDescriptor = IntPtr.Zero,
-            bInheritHandle = 1,
-        };
-
-        if (!NativeMethods.CreatePipe(out var stdinRead, out var stdinWrite, ref inheritable, 0))
-        {
-            throw new Win32Exception(Marshal.GetLastWin32Error(), "创建标准输入管道失败。");
-        }
-
-        if (!NativeMethods.CreatePipe(out var stdoutRead, out var stdoutWrite, ref inheritable, 0))
+        catch
         {
             CloseHandles(stdinRead, stdinWrite);
-            throw new Win32Exception(Marshal.GetLastWin32Error(), "创建标准输出管道失败。");
+            throw;
         }
 
         var startupInfo = new NativeMethods.STARTUPINFOEX();
@@ -83,26 +52,8 @@ public sealed class PipeTerminalSession : ITerminalSession
 
         try
         {
-            created = NativeMethods.CreateProcess(
-                null,
-                BuildCommandLine(profile),
-                IntPtr.Zero,
-                IntPtr.Zero,
-                bInheritHandles: true,
-                dwCreationFlags: NativeMethods.CREATE_NO_WINDOW,
-                IntPtr.Zero,
-                profile.WorkingDirectory ?? Environment.CurrentDirectory,
-                ref startupInfo,
-                out var processInformation);
-
-            if (!created)
-            {
-                throw new Win32Exception(Marshal.GetLastWin32Error(), $"启动 {profile.Name} 失败。");
-            }
-
-            _processHandle = processInformation.hProcess;
-            _threadHandle = processInformation.hThread;
-            ProcessId = processInformation.dwProcessId;
+            SpawnProcess(profile, NativeMethods.CREATE_NO_WINDOW, ref startupInfo);
+            created = true;
         }
         finally
         {
@@ -116,74 +67,14 @@ public sealed class PipeTerminalSession : ITerminalSession
             }
         }
 
-        _input = new FileStream(new SafeFileHandle(stdinWrite, ownsHandle: true), FileAccess.Write, bufferSize: 1);
-        _output = new FileStream(new SafeFileHandle(stdoutRead, ownsHandle: true), FileAccess.Read, bufferSize: 1);
-
-        _running = true;
-        _readerThread = new Thread(ReadLoop)
-        {
-            IsBackground = true,
-            Name = "MoxTerm.Pipe.Reader",
-        };
-        _readerThread.Start();
-        _exitTask = Task.Run(WaitForExit);
+        RunSession(stdinWrite, stdoutRead, "MoxTerm.Pipe.Reader");
     }
 
-    public void Write(string text)
-    {
-        if (!_running || string.IsNullOrEmpty(text) || _input is null)
-        {
-            return;
-        }
-
-        try
-        {
-            var bytes = _encoding.GetBytes(text);
-            _input.Write(bytes, 0, bytes.Length);
-            _input.Flush();
-        }
-        catch (Exception ex) when (ex is IOException or ObjectDisposedException)
-        {
-            // Shell 已退出，输入丢弃即可
-        }
-    }
-
-    /// <summary>管道没有尺寸概念，无法把行列数告知 Shell；界面侧仍会自行重排。</summary>
-    public void Resize(int columns, int rows)
-    {
-    }
-
-    public void Dispose()
-    {
-        if (_disposed)
-        {
-            return;
-        }
-
-        _disposed = true;
-        _running = false;
-
-        // 关闭输入管道会让 Shell 读到 EOF
-        _input?.Dispose();
-        _input = null;
-
-        // 先结束 Shell：进程一退输出管道立即断开，读取线程与退出监听毫秒级返回。
-        // 顺序不能反过来——PowerShell 不因 EOF 自行退出，先等线程会白白拖满超时（关闭窗口要卡好几秒）
-        if (_processHandle != IntPtr.Zero)
-        {
-            NativeMethods.TerminateProcess(_processHandle, 0);
-        }
-
-        _readerThread?.Join(TimeSpan.FromSeconds(2));
-        _exitTask?.Wait(TimeSpan.FromSeconds(2));
-
-        _output?.Dispose();
-        _output = null;
-
-        CloseHandles(_processHandle, _threadHandle);
-        _processHandle = IntPtr.Zero;
-        _threadHandle = IntPtr.Zero;
-    }
+    protected override void BeforeTerminate() =>
+        // 先结束输入：Shell 读到 EOF，进程一退输出管道立即断开，
+        // 读取线程与退出监听毫秒级返回。顺序不能反过来——PowerShell 不因
+        // EOF 自行退出，先等线程会白白拖满超时（关闭窗口要卡好几秒）
+        CloseInput();
 
     private static Encoding ResolveEncoding()
     {
@@ -201,82 +92,5 @@ public sealed class PipeTerminalSession : ITerminalSession
             System.Diagnostics.Debug.WriteLine($"[MoxTerm] 无法解析 OEM 代码页，回退到 UTF-8: {ex.Message}");
             return Encoding.UTF8;
         }
-    }
-
-    private static string BuildCommandLine(ShellProfile profile) =>
-        string.IsNullOrWhiteSpace(profile.Arguments)
-            ? $"\"{profile.Executable}\""
-            : $"\"{profile.Executable}\" {profile.Arguments}";
-
-    private static void CloseHandles(params IntPtr[] handles)
-    {
-        foreach (var handle in handles)
-        {
-            if (handle != IntPtr.Zero)
-            {
-                NativeMethods.CloseHandle(handle);
-            }
-        }
-    }
-
-    private void ReadLoop()
-    {
-        var output = _output;
-        if (output is null)
-        {
-            return;
-        }
-
-        var buffer = new byte[8192];
-        var characters = new char[_encoding.GetMaxCharCount(buffer.Length)];
-        var decoder = _encoding.GetDecoder();
-
-        try
-        {
-            while (true)
-            {
-                var read = output.Read(buffer, 0, buffer.Length);
-                if (read <= 0)
-                {
-                    break;
-                }
-
-                var count = decoder.GetChars(buffer, 0, read, characters, 0, flush: false);
-                if (count > 0)
-                {
-                    OutputReceived?.Invoke(this, new string(characters, 0, count));
-                }
-            }
-
-            var tail = decoder.GetChars(Array.Empty<byte>(), 0, 0, characters, 0, flush: true);
-            if (tail > 0)
-            {
-                OutputReceived?.Invoke(this, new string(characters, 0, tail));
-            }
-        }
-        catch (Exception ex) when (ex is IOException or ObjectDisposedException or OperationCanceledException or UnauthorizedAccessException)
-        {
-            // 会话被释放或 Shell 退出，读取循环正常结束
-        }
-    }
-
-    private void WaitForExit()
-    {
-        var handle = _processHandle;
-        if (handle == IntPtr.Zero)
-        {
-            return;
-        }
-
-        NativeMethods.WaitForSingleObject(handle, NativeMethods.INFINITE);
-
-        var exitCode = 0;
-        if (NativeMethods.GetExitCodeProcess(handle, out var code))
-        {
-            exitCode = unchecked((int)code);
-        }
-
-        _running = false;
-        Exited?.Invoke(this, exitCode);
     }
 }

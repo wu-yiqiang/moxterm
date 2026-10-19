@@ -53,6 +53,17 @@ public sealed class AppSettings
 
     /// <summary>粘贴含换行的内容前是否弹窗确认。</summary>
     public bool ConfirmMultilinePaste { get; set; } = true;
+
+    /// <summary>
+    /// 已保存的连接。密码经 <see cref="SecretProtector"/>（DPAPI，当前用户）加密后存储。
+    /// </summary>
+    public List<SavedSession> SavedSessions { get; set; } = new();
+
+    /// <summary>
+    /// 旧版本的 SSH 会话列表字段。读取时并入 <see cref="SavedSessions"/>，
+    /// 迁完置空（序列化时跳过），只为兼容早期配置文件而保留。
+    /// </summary>
+    public List<SavedSession>? SshSessions { get; set; }
 }
 
 /// <summary>
@@ -96,6 +107,7 @@ public sealed class SettingsService
 
             var json = File.ReadAllText(_filePath);
             Current = JsonSerializer.Deserialize<AppSettings>(json, SerializerOptions) ?? new AppSettings();
+            MigrateLegacySessions(Current);
         }
         catch (Exception ex) when (ex is IOException or JsonException or UnauthorizedAccessException)
         {
@@ -119,6 +131,25 @@ public sealed class SettingsService
         Changed?.Invoke(this, EventArgs.Empty);
     }
 
+    /// <summary>早期配置里已保存的会话都在 <c>sshSessions</c> 下且没有协议字段，并入新列表并补上 SSH 标识。</summary>
+    private static void MigrateLegacySessions(AppSettings settings)
+    {
+        if (settings.SshSessions is not { Count: > 0 } legacy)
+        {
+            return;
+        }
+
+        foreach (var session in legacy)
+        {
+            settings.SavedSessions.Add(session with
+            {
+                Protocol = string.IsNullOrEmpty(session.Protocol) ? SessionProtocol.Ssh : session.Protocol,
+            });
+        }
+
+        settings.SshSessions = null;
+    }
+
     /// <summary>把设置中的主题字符串解析成 <see cref="ElementTheme"/>。</summary>
     public ElementTheme ResolveTheme() => Current.Theme switch
     {
@@ -126,11 +157,4 @@ public sealed class SettingsService
         "Dark" => ElementTheme.Dark,
         _ => ElementTheme.Default,
     };
-
-    /// <summary>把所有设置恢复为默认值并持久化。</summary>
-    public void Reset()
-    {
-        Current = new AppSettings();
-        Save();
-    }
 }

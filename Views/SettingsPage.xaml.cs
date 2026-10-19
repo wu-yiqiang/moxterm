@@ -406,27 +406,4 @@ public sealed partial class SettingsPage : Page
         App.Settings.Current.ConfirmMultilinePaste = ConfirmPasteSwitch.IsOn;
         ApplyAndSave();
     }
-
-    private async void OnResetClick(object sender, RoutedEventArgs e)
-    {
-        var dialog = new ContentDialog
-        {
-            XamlRoot = XamlRoot,
-            Title = Loc.Reset,
-            Content = Loc.ResetDialogContent,
-            PrimaryButtonText = Loc.Reset,
-            CloseButtonText = Loc.Cancel,
-            DefaultButton = ContentDialogButton.Close,
-        };
-
-        if (await dialog.ShowAsync() != ContentDialogResult.Primary)
-        {
-            return;
-        }
-
-        // Reset 会触发 Changed，界面随之回填默认值
-        App.Settings.Reset();
-        App.Shell?.ApplyTheme(App.Settings.ResolveTheme());
-        TerminalPage.Current?.ApplySettings();
-    }
 }

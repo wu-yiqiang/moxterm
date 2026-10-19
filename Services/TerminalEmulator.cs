@@ -110,6 +110,11 @@ public sealed class TerminalEmulator
     /// <param name="showCursor">
     /// 是否画出光标。<c>false</c> 用于光标闪烁的“熄灭”相位，此时光标位置仍按原样渲染。
     /// </param>
+    /// <remarks>
+    /// 屏幕区始终渲染满 <see cref="Rows"/> 行（不裁尾部空行）：滚动到底时可见区域正好是
+    /// 屏幕窗口，清屏后提示符停在首行、下方全空，旧内容只存在于回滚缓冲里——与真实终端
+    /// 的视口模型一致。若裁掉尾部空行，提示符会紧贴回滚内容的末尾，看起来就像没清屏。
+    /// </remarks>
     public string GetText(bool showCursor = true)
     {
         var builder = new StringBuilder((_scrollback.Count + _rows) * (_columns + 1));
@@ -119,15 +124,13 @@ public sealed class TerminalEmulator
             builder.Append(line).Append('\n');
         }
 
-        // 去掉底部没有内容的空行，避免界面下方出现大片空白
-        var lastContentRow = _rows - 1;
-        while (lastContentRow > 0 && IsRowBlank(lastContentRow))
+        for (var y = 0; y < _rows; y++)
         {
-            lastContentRow--;
-        }
+            if (y > 0)
+            {
+                builder.Append('\n');
+            }
 
-        for (var y = 0; y <= lastContentRow; y++)
-        {
             if (y == _cursorY && _cursorVisible && showCursor)
             {
                 AppendRowWithCursor(builder, y);
@@ -136,11 +139,9 @@ public sealed class TerminalEmulator
             {
                 AppendRow(builder, y);
             }
-
-            builder.Append('\n');
         }
 
-        return builder.ToString().TrimEnd('\n');
+        return builder.ToString();
     }
 
     /// <summary>逐字符喂入 Shell 输出。允许在任意位置分块，解析状态会跨调用保持。</summary>
@@ -489,21 +490,6 @@ public sealed class TerminalEmulator
         {
             Array.Fill(_cells, Blank, from, to - from);
         }
-    }
-
-    private bool IsRowBlank(int row)
-    {
-        var start = row * _columns;
-
-        for (var x = 0; x < _columns; x++)
-        {
-            if (_cells[start + x] != Blank)
-            {
-                return false;
-            }
-        }
-
-        return true;
     }
 
     private string GetRowText(int row)

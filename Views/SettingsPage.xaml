@@ -51,6 +51,7 @@
                                     默认按符号字体自身的尺寸渲染，正好与卡片式设置的图标大小相称。
                                 -->
                                 <SymbolIcon
+                                    x:Name="GlyphIcon"
                                     Grid.Column="0"
                                     Width="20"
                                     HorizontalAlignment="Center"
@@ -101,7 +102,8 @@
                             Title="{x:Bind Loc.Language, Mode=OneWay}"
                             Description="{x:Bind Loc.LanguageDesc, Mode=OneWay}"
                             DividerVisibility="Collapsed"
-                            Glyph="World">
+                            Glyph="World"
+                            GlyphCode="&#xE8C1;">
                             <ComboBox
                                 x:Name="LanguageComboBox"
                                 Width="200"
@@ -111,7 +113,8 @@
                         <controls:SettingsRow
                             Title="{x:Bind Loc.Theme, Mode=OneWay}"
                             Description="{x:Bind Loc.ThemeDesc, Mode=OneWay}"
-                            Glyph="Setting">
+                            Glyph="Setting"
+                            GlyphCode="&#xE771;">
                             <ComboBox
                                 x:Name="ThemeComboBox"
                                 Width="200"
@@ -178,17 +181,117 @@
                             Title="{x:Bind Loc.DefaultShell, Mode=OneWay}"
                             Description="{x:Bind Loc.DefaultShellDesc, Mode=OneWay}"
                             DividerVisibility="Collapsed"
-                            Glyph="Repair">
+                            Glyph="Repair"
+                            GlyphCode="&#xE756;">
                             <ComboBox
                                 x:Name="DefaultShellComboBox"
                                 Width="200"
                                 SelectionChanged="OnDefaultShellChanged" />
                         </controls:SettingsRow>
 
+                        <!-- 起始目录：卡内折叠行，点击头部展开/收起详细设置 -->
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <Border
+                                Grid.Row="0"
+                                Height="1"
+                                VerticalAlignment="Top"
+                                Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
+
+                            <Button
+                                Grid.Row="0"
+                                Padding="0"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Stretch"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Click="OnWorkingDirHeaderClick">
+                                <Grid
+                                    MinHeight="68"
+                                    Padding="20,12,16,12"
+                                    ColumnSpacing="18">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <SymbolIcon
+                                        Grid.Column="0"
+                                        Width="20"
+                                        HorizontalAlignment="Center"
+                                        Symbol="Folder"
+                                        VerticalAlignment="Center" />
+
+                                    <TextBlock
+                                        Grid.Column="1"
+                                        VerticalAlignment="Center"
+                                        Style="{StaticResource BodyStrongTextBlockStyle}"
+                                        Text="{x:Bind Loc.WorkingDir, Mode=OneWay}"
+                                        TextWrapping="Wrap" />
+
+                                    <!-- 当前值摘要：折叠时与箭头一起显示在右侧 -->
+                                    <TextBlock
+                                        x:Name="WorkingDirectorySummary"
+                                        Grid.Column="2"
+                                        MaxWidth="360"
+                                        HorizontalAlignment="Right"
+                                        VerticalAlignment="Center"
+                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                        Style="{StaticResource CaptionTextBlockStyle}"
+                                        TextAlignment="Right"
+                                        TextTrimming="CharacterEllipsis" />
+
+                                    <FontIcon
+                                        x:Name="WorkingDirChevron"
+                                        Grid.Column="3"
+                                        VerticalAlignment="Center"
+                                        FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                                        FontSize="14"
+                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                        Glyph="&#xE70D;" />
+                                </Grid>
+                            </Button>
+
+                            <Border
+                                x:Name="WorkingDirPanel"
+                                Grid.Row="1"
+                                Padding="58,16,20,16"
+                                Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
+                                BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
+                                BorderThickness="0,1,0,0"
+                                Visibility="Collapsed">
+                                <StackPanel Spacing="10">
+                                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                        <TextBox
+                                            x:Name="WorkingDirectoryBox"
+                                            Width="200"
+                                            LostFocus="OnWorkingDirectoryLostFocus"
+                                            PlaceholderText="{x:Bind Loc.WorkingDirEmpty, Mode=OneWay}" />
+                                        <Button
+                                            x:Name="BrowseButton"
+                                            Click="OnBrowseClick"
+                                            Content="{x:Bind Loc.Browse, Mode=OneWay}" />
+                                    </StackPanel>
+                                    <CheckBox
+                                        x:Name="UseParentDirCheckBox"
+                                        Checked="OnUseParentDirToggled"
+                                        Content="{x:Bind Loc.UseParentDir, Mode=OneWay}"
+                                        Unchecked="OnUseParentDirToggled" />
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+
                         <controls:SettingsRow
                             Title="{x:Bind Loc.Scrollback, Mode=OneWay}"
                             Description="{x:Bind Loc.ScrollbackDesc, Mode=OneWay}"
-                            Glyph="Clock">
+                            Glyph="Clock"
+                            GlyphCode="&#xE81C;">
                             <NumberBox
                                 x:Name="ScrollbackBox"
                                 Width="200"
@@ -212,7 +315,8 @@
                         <controls:SettingsRow
                             Title="{x:Bind Loc.CursorBlink, Mode=OneWay}"
                             Description="{x:Bind Loc.CursorBlinkDesc, Mode=OneWay}"
-                            Glyph="Sync">
+                            Glyph="Sync"
+                            GlyphCode="&#xE706;">
                             <!-- 只显示药丸并清除主题 MinWidth，否则药丸在加宽的控件框内左对齐，右侧留空 -->
                             <ToggleSwitch
                                 x:Name="CursorBlinkSwitch"
@@ -223,102 +327,14 @@
                         <controls:SettingsRow
                             x:Name="BackendRow"
                             Title="{x:Bind Loc.Backend, Mode=OneWay}"
-                            Glyph="Library">
+                            Glyph="Library"
+                            GlyphCode="&#xE7F4;">
                             <ComboBox
                                 x:Name="BackendComboBox"
                                 Width="200"
                                 SelectionChanged="OnBackendChanged" />
                         </controls:SettingsRow>
                     </StackPanel>
-                </Border>
-
-                <!-- 起始目录：独立折叠卡片，展开后内容区带次级底色与分割线 -->
-                <Border Style="{StaticResource SettingsCardStyle}">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                        </Grid.RowDefinitions>
-
-                        <Button
-                            Grid.Row="0"
-                            Padding="0"
-                            HorizontalContentAlignment="Stretch"
-                            Background="Transparent"
-                            BorderThickness="0"
-                            Click="OnWorkingDirHeaderClick">
-                            <Grid
-                                MinHeight="68"
-                                Padding="20,12,16,12"
-                                ColumnSpacing="18">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-
-                                <SymbolIcon
-                                    Grid.Column="0"
-                                    Width="20"
-                                    HorizontalAlignment="Center"
-                                    Symbol="Folder"
-                                    VerticalAlignment="Center" />
-
-                                <StackPanel
-                                    Grid.Column="1"
-                                    VerticalAlignment="Center"
-                                    Spacing="2">
-                                    <TextBlock
-                                        Style="{StaticResource BodyStrongTextBlockStyle}"
-                                        Text="{x:Bind Loc.WorkingDir, Mode=OneWay}"
-                                        TextWrapping="Wrap" />
-                                    <TextBlock
-                                        x:Name="WorkingDirectorySummary"
-                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                        Style="{StaticResource CaptionTextBlockStyle}"
-                                        TextWrapping="Wrap" />
-                                </StackPanel>
-
-                                <FontIcon
-                                    x:Name="WorkingDirChevron"
-                                    Grid.Column="2"
-                                    VerticalAlignment="Center"
-                                    FontFamily="{ThemeResource SymbolThemeFontFamily}"
-                                    FontSize="14"
-                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                    Glyph="&#xE70D;" />
-                            </Grid>
-                        </Button>
-
-                        <Border
-                            x:Name="WorkingDirPanel"
-                            Grid.Row="1"
-                            Padding="58,16,20,16"
-                            Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
-                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                            BorderThickness="0,1,0,0"
-                            CornerRadius="0,0,7,7"
-                            Visibility="Collapsed">
-                            <StackPanel Spacing="10">
-                                <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                                    <TextBox
-                                        x:Name="WorkingDirectoryBox"
-                                        Width="200"
-                                        LostFocus="OnWorkingDirectoryLostFocus"
-                                        PlaceholderText="{x:Bind Loc.WorkingDirEmpty, Mode=OneWay}" />
-                                    <Button
-                                        x:Name="BrowseButton"
-                                        Click="OnBrowseClick"
-                                        Content="{x:Bind Loc.Browse, Mode=OneWay}" />
-                                </StackPanel>
-                                <CheckBox
-                                    x:Name="UseParentDirCheckBox"
-                                    Checked="OnUseParentDirToggled"
-                                    Content="{x:Bind Loc.UseParentDir, Mode=OneWay}"
-                                    Unchecked="OnUseParentDirToggled" />
-                            </StackPanel>
-                        </Border>
-                    </Grid>
                 </Border>
             </StackPanel>
 
@@ -350,17 +366,8 @@
                             x:Name="AboutRow"
                             Title="MoxTerm"
                             DividerVisibility="Collapsed"
-                            Glyph="Help" />
-
-                        <controls:SettingsRow
-                            Title="{x:Bind Loc.Reset, Mode=OneWay}"
-                            Description="{x:Bind Loc.ResetDesc, Mode=OneWay}"
-                            Glyph="Refresh">
-                            <Button
-                                x:Name="ResetButton"
-                                Click="OnResetClick"
-                                Content="{x:Bind Loc.Reset, Mode=OneWay}" />
-                        </controls:SettingsRow>
+                            Glyph="Help"
+                            GlyphCode="&#xE946;" />
                     </StackPanel>
                 </Border>
             </StackPanel>
