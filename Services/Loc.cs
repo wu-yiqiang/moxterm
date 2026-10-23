@@ -63,6 +63,8 @@ public sealed class Loc : INotifyPropertyChanged
     public string SshUsernameLabel => T("用户名", "Username");
     public string SshUsernamePlaceholder => T("可选", "Optional");
     public string SshPasswordLabel => T("密码", "Password");
+    public string RevealPassword => T("显示密码", "Reveal password");
+    public string HidePassword => T("隐藏密码", "Hide password");
     public string SshNotesLabel => T("备注", "Notes");
     public string Connect => T("连接", "Connect");
     public string SshSaveSession => T("保存此会话", "Save this session");

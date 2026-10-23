@@ -5,6 +5,7 @@ using Microsoft.UI.Xaml.Markup;
 using Microsoft.UI.Xaml.Media;
 using MoxTerm.Controls;
 using MoxTerm.Services;
+using Windows.Foundation;
 
 namespace MoxTerm.Views;
 
@@ -324,20 +325,117 @@ public sealed partial class TerminalPage : Page
             Header = Loc.Instance.SshHostLabel,
             PlaceholderText = Loc.Instance.SshHostPlaceholder,
         };
-        var portBox = new TextBox
+        var portBox = new NumberBox
         {
             Header = Loc.Instance.SshPortLabel,
-            Text = protocols[0].DefaultPort.ToString(),
+            // 端口范围 1–65535，整数模式，点箭头每次 ±1
+            Minimum = 1,
+            Maximum = 65535,
+            SmallChange = 1,
+            LargeChange = 10,
+            AcceptsExpression = false,
+            Value = protocols[0].DefaultPort,
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+            // 显示右侧上下调整箭头
+            SpinButtonPlacementMode = NumberBoxSpinButtonPlacementMode.Compact,
+        };
+        // NumberBox 无 IsInteger 属性，用 NumberFormatter 强制整数显示
+        portBox.NumberFormatter = new Windows.Globalization.NumberFormatting.DecimalFormatter
+        {
+            FractionDigits = 0,
+            IntegerDigits = 1,
         };
         var userBox = new TextBox
         {
             Header = Loc.Instance.SshUsernameLabel,
             PlaceholderText = Loc.Instance.SshUsernamePlaceholder,
         };
+        // PasswordBox 内置 Peek 只支持"按住显示"，这里用内嵌按钮实现"点击切换"
         var passwordBox = new PasswordBox
         {
             Header = Loc.Instance.SshPasswordLabel,
+            PasswordRevealMode = PasswordRevealMode.Hidden,
+            // 右侧留出图标空间，避免输入文字被图标遮挡
+            Padding = new Thickness(12, 5, 36, 5),
         };
+        // 图标用矢量绘制：Segoe MDL2 / Segoe Fluent 都没有"眼睛+斜线"这一对，字体字形不可靠
+        // 掩码态显示"眼睛+斜线"，明文态显示"纯眼睛"
+        var iconBrush = passwordBox.Foreground;
+        var eyeMasked = BuildEyeIcon(slashed: true, iconBrush);
+        var eyePlain = BuildEyeIcon(slashed: false, iconBrush);
+        var revealBtn = new Button
+        {
+            Content = new Viewbox { Width = 16, Height = 16, Child = eyeMasked },
+            Width = 28,
+            Height = 28,
+            Padding = new Thickness(0),
+            Background = new SolidColorBrush(Microsoft.UI.Colors.Transparent),
+            BorderThickness = new Thickness(0),
+            // 叠加在输入框内部右下角
+            HorizontalAlignment = HorizontalAlignment.Right,
+            VerticalAlignment = VerticalAlignment.Bottom,
+            Margin = new Thickness(0, 0, 6, 2),
+        };
+        Microsoft.UI.Xaml.Controls.ToolTipService.SetToolTip(revealBtn, Loc.Instance.RevealPassword);
+        revealBtn.Click += (_, _) =>
+        {
+            if (passwordBox.PasswordRevealMode == PasswordRevealMode.Hidden)
+            {
+                passwordBox.PasswordRevealMode = PasswordRevealMode.Visible;
+                ((Viewbox)revealBtn.Content).Child = eyePlain;
+                Microsoft.UI.Xaml.Controls.ToolTipService.SetToolTip(revealBtn, Loc.Instance.HidePassword);
+            }
+            else
+            {
+                passwordBox.PasswordRevealMode = PasswordRevealMode.Hidden;
+                ((Viewbox)revealBtn.Content).Child = eyeMasked;
+                Microsoft.UI.Xaml.Controls.ToolTipService.SetToolTip(revealBtn, Loc.Instance.RevealPassword);
+            }
+        };
+
+        // 24x24 画布内的矢量眼睛；slashed 时叠加一条斜线表示"已隐藏"
+        static Canvas BuildEyeIcon(bool slashed, Brush brush)
+        {
+            var outline = new PathFigure { StartPoint = new Point(1, 12), IsClosed = true, IsFilled = false };
+            outline.Segments.Add(new BezierSegment { Point1 = new Point(5.5, 6.5), Point2 = new Point(8.5, 4), Point3 = new Point(12, 4) });
+            outline.Segments.Add(new BezierSegment { Point1 = new Point(15.5, 4), Point2 = new Point(18.5, 6.5), Point3 = new Point(23, 12) });
+            outline.Segments.Add(new BezierSegment { Point1 = new Point(18.5, 17.5), Point2 = new Point(15.5, 20), Point3 = new Point(12, 20) });
+            outline.Segments.Add(new BezierSegment { Point1 = new Point(8.5, 20), Point2 = new Point(5.5, 17.5), Point3 = new Point(1, 12) });
+            var geometry = new PathGeometry();
+            geometry.Figures.Add(outline);
+
+            var canvas = new Canvas { Width = 24, Height = 24 };
+            canvas.Children.Add(new Microsoft.UI.Xaml.Shapes.Path
+            {
+                Data = geometry,
+                Stroke = brush,
+                StrokeThickness = 1.8,
+                StrokeLineJoin = PenLineJoin.Round,
+                StrokeStartLineCap = PenLineCap.Round,
+                StrokeEndLineCap = PenLineCap.Round,
+            });
+            var pupil = new Microsoft.UI.Xaml.Shapes.Ellipse { Width = 6, Height = 6, Fill = brush };
+            Canvas.SetLeft(pupil, 9);
+            Canvas.SetTop(pupil, 9);
+            canvas.Children.Add(pupil);
+            if (slashed)
+            {
+                canvas.Children.Add(new Microsoft.UI.Xaml.Shapes.Line
+                {
+                    X1 = 2, Y1 = 2, X2 = 22, Y2 = 22,
+                    Stroke = brush,
+                    StrokeThickness = 2,
+                    StrokeStartLineCap = PenLineCap.Round,
+                    StrokeEndLineCap = PenLineCap.Round,
+                });
+            }
+            return canvas;
+        }
+
+        // 同一单元格叠加：后添加的按钮位于上层，且只占右侧 28x28，不影响输入框其余区域点击
+        var passwordWrap = new Grid();
+        passwordWrap.Children.Add(passwordBox);
+        passwordWrap.Children.Add(revealBtn);
         var serialPortBox = new ComboBox
         {
             Header = Loc.Instance.SerialPortLabel,
@@ -370,7 +468,7 @@ public sealed partial class TerminalPage : Page
         fields.Children.Add(hostBox);
         fields.Children.Add(portBox);
         fields.Children.Add(userBox);
-        fields.Children.Add(passwordBox);
+        fields.Children.Add(passwordWrap);
         fields.Children.Add(serialPortBox);
         fields.Children.Add(baudBox);
 
@@ -434,7 +532,7 @@ public sealed partial class TerminalPage : Page
             else if (portBox.Visibility == Visibility.Visible)
             {
                 // 端口默认值跟随协议（SSH 22 / Telnet 23）
-                portBox.Text = protocol.DefaultPort.ToString();
+                portBox.Value = protocol.DefaultPort;
             }
         }
 
@@ -455,7 +553,7 @@ public sealed partial class TerminalPage : Page
 
             nameBox.Text = editing.Name;
             hostBox.Text = editing.Host;
-            portBox.Text = editing.Port > 0 ? editing.Port.ToString() : portBox.Text;
+            portBox.Value = editing.Port > 0 ? editing.Port : portBox.Value;
             userBox.Text = editing.Username;
             passwordBox.Password = SecretProtector.Unprotect(editing.Password);
             notesBox.Text = editing.Notes;
@@ -498,8 +596,9 @@ public sealed partial class TerminalPage : Page
             return;
         }
 
-        var port = int.TryParse(portBox.Text.Trim(), out var parsedPort) && parsedPort is >= 1 and <= 65535
-            ? parsedPort
+        // NumberBox 已自带 Minimum/Maximum 保障，直接取 Value
+        var port = portBox.Value is >= 1 and <= 65535
+            ? (int)portBox.Value
             : protocol.DefaultPort;
         var baudRate = int.TryParse(baudBox.Text?.Trim(), out var parsedBaud) && parsedBaud > 0
             ? parsedBaud
