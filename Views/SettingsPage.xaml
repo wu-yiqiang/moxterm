@@ -271,6 +271,26 @@
             </StackPanel>
 
             <StackPanel Spacing="8">
+                <TextBlock Text="{x:Bind Loc.GroupWindow, Mode=OneWay}" Style="{StaticResource BodyStrongTextBlockStyle}" />
+
+                <Border Style="{StaticResource SettingsCardStyle}">
+                    <StackPanel>
+                        <controls:SettingsRow
+                            Title="{x:Bind Loc.HideOnMinimize, Mode=OneWay}"
+                            Description="{x:Bind Loc.HideOnMinimizeDesc, Mode=OneWay}"
+                            DividerVisibility="Collapsed"
+                            Glyph="Setting"
+                            GlyphCode="&#xE921;">
+                            <ToggleSwitch
+                                x:Name="HideOnMinimizeSwitch"
+                                MinWidth="0"
+                                Toggled="OnHideOnMinimizeToggled" />
+                        </controls:SettingsRow>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+
+            <StackPanel Spacing="8">
                 <TextBlock Text="{x:Bind Loc.GroupInput, Mode=OneWay}" Style="{StaticResource BodyStrongTextBlockStyle}" />
 
                 <Border Style="{StaticResource SettingsCardStyle}">

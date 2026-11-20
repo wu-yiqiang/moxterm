@@ -46,7 +46,7 @@ public sealed class Loc : INotifyPropertyChanged
     private string T(string zh, string en) => ActiveLanguage == "zh" ? zh : en;
 
     // 主窗口与终端工具栏
-    public string NavTerminal => T("终端", "Terminal");
+    public string NavTerminal => T("会话", "Sessions");
 
     public string ProtocolComingSoon(string protocol) => T(
         $"{protocol} 会话将在后续版本提供。",
@@ -118,6 +118,32 @@ public sealed class Loc : INotifyPropertyChanged
     public string WorkingDirEmpty => T("留空则使用进程当前目录。", "Leave empty to use the current process directory.");
     public string WorkingDirReset => T("恢复默认（使用进程当前目录）", "Reset to default (process directory)");
     public string Browse => T("浏览", "Browse");
+
+    // SFTP 面板
+    public string SftpLocal => T("本地", "Local");
+    public string SftpRemote => T("远程", "Remote");
+    public string SftpUpload => T("上传", "Upload");
+    public string SftpDownload => T("下载", "Download");
+    public string SftpNewFolder => T("新建文件夹", "New folder");
+    public string SftpRename => T("重命名", "Rename");
+    public string SftpRefresh => T("刷新", "Refresh");
+    public string SftpUp => T("上级", "Up");
+    public string SftpCreate => T("创建", "Create");
+    public string SftpConnecting => T("正在连接…", "Connecting…");
+    public string SftpConnectFailed => T("连接失败：", "Connection failed: ");
+    public string SftpAuthFailed => T("用户名或密码错误。请编辑该连接，重新输入密码后再试。", "Wrong username or password. Edit this connection and re-enter the password.");
+    public string SftpFailed => T("操作失败：", "Operation failed: ");
+    public string SftpPathNotFound => T("目录不存在。", "The directory doesn't exist.");
+    public string SftpNoFileSelected => T("请先选择文件。", "Select a file first.");
+    public string SftpSelectOne => T("请先选择一个条目。", "Select an item first.");
+    public string SftpUploading => T("正在上传", "Uploading");
+    public string SftpDropToUpload => T("释放以上传到当前目录", "Drop to upload here");
+    public string SftpBusy => T("正在传输，请稍候再试。", "A transfer is already running, please wait.");
+    public string SftpDownloading => T("正在下载", "Downloading");
+    public string SftpFolderName => T("文件夹名称", "Folder name");
+    public string SftpNewName => T("新名称", "New name");
+    public string SftpInvalidName => T("名称不能为空，且不能包含 / 或 \\。", "The name must not be empty or contain / or \\.");
+    public string SftpDeleteConfirm => T("确定删除以下条目？", "Delete the following items?");
     public string Scrollback => T("回滚缓冲行数", "Scrollback lines");
     public string ScrollbackDesc => T("保留的历史输出行数，取值 200 – 100000", "History lines kept, 200 – 100000");
     public string CursorShape => T("光标形状", "Cursor shape");
@@ -125,6 +151,15 @@ public sealed class Loc : INotifyPropertyChanged
     public string CursorBlink => T("光标闪烁", "Cursor blinking");
     public string CursorBlinkDesc => T("仅在终端获得焦点时闪烁", "Blink only while the terminal is focused");
     public string Backend => T("终端后端", "Terminal backend");
+
+    // 窗口
+    public string GroupWindow => T("窗口", "Window");
+    public string HideOnMinimize => T("最小化时在通知区域隐藏终端", "Hide the terminal in the notification area when minimized");
+    public string HideOnMinimizeDesc => T(
+        "最小化后隐藏窗口与任务栏按钮，应用继续在后台运行；点击通知区域图标可恢复窗口",
+        "Hide the window and taskbar button when minimized while the app keeps running; click the notification area icon to restore it");
+    public string TrayShow => T("显示主窗口", "Show main window");
+    public string TrayExit => T("退出", "Exit");
 
     // 输入
     public string ConfirmPaste => T("粘贴多行文本时确认", "Confirm multi-line paste");

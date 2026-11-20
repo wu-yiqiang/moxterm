@@ -39,6 +39,7 @@ public sealed partial class MainWindow : Window
         TryApplyBackdrop();
         ApplyTheme(App.Settings.ResolveTheme());
         ConfigureWindowState();
+        InitializeTray();
 
         // 主题切换（含跟随系统时的系统主题变化）后重算终端配色
         if (Content is FrameworkElement root)
@@ -126,6 +127,55 @@ public sealed partial class MainWindow : Window
 
         // 启动即最大化
         presenter.Maximize();
+    }
+
+    private TrayIcon? _tray;
+    private NativeMethods.SubclassProc? _subclassCallback;
+
+    /// <summary>
+    /// 初始化通知区域图标，并子类化主窗口消息以捕获“最小化”。
+    /// 只有设置里开启 <see cref="AppSettings.HideOnMinimize"/> 时才隐藏到托盘。
+    /// </summary>
+    private void InitializeTray()
+    {
+        _tray = new TrayIcon(RestoreFromTray, () => Close());
+        _subclassCallback = OnWindowMessage;
+
+        var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
+        NativeMethods.SetWindowSubclass(hwnd, _subclassCallback, new IntPtr(1), IntPtr.Zero);
+
+        Closed += (_, _) =>
+        {
+            _tray?.Dispose();
+            _tray = null;
+        };
+    }
+
+    private IntPtr OnWindowMessage(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam, IntPtr id, IntPtr data)
+    {
+        if (msg == NativeMethods.WM_SIZE
+            && wParam.ToInt32() == NativeMethods.SIZE_MINIMIZED
+            && App.Settings.Current.HideOnMinimize)
+        {
+            AppWindow.Hide();
+            _tray?.Show();
+        }
+
+        return NativeMethods.DefSubclassProc(hWnd, msg, wParam, lParam);
+    }
+
+    /// <summary>从托盘还原窗口：先显示已隐藏的窗口，再从最小化状态恢复。</summary>
+    private void RestoreFromTray()
+    {
+        _tray?.Hide();
+        AppWindow.Show();
+
+        if (AppWindow.Presenter is OverlappedPresenter presenter)
+        {
+            presenter.Restore();
+        }
+
+        Activate();
     }
 
     private void OnNavSelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)

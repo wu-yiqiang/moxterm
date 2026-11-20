@@ -54,6 +54,9 @@ public sealed class AppSettings
     /// <summary>粘贴含换行的内容前是否弹窗确认。</summary>
     public bool ConfirmMultilinePaste { get; set; } = true;
 
+    /// <summary>最小化时是否隐藏到通知区域（托盘）并在后台继续运行。</summary>
+    public bool HideOnMinimize { get; set; }
+
     /// <summary>
     /// 已保存的连接。密码经 <see cref="SecretProtector"/>（DPAPI，当前用户）加密后存储。
     /// </summary>

@@ -32,6 +32,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.250916003" />
+    <PackageReference Include="SSH.NET" Version="2026.0.1" />
     <!-- SSH 密码用 DPAPI（当前用户）加密存储 -->
     <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.0" />
     <!-- 串口（Serial）会话 -->
@@ -44,5 +45,19 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+
+  <!--
+    dotnet publish 不会自动带上 MakePri 生成的 MoxTerm.pri，
+    缺少它时 WinUI 启动阶段读取应用资源会直接崩溃，这里显式加入发布输出。
+  -->
+  <Target Name="IncludePriInPublish" AfterTargets="ComputeFilesToPublish">
+    <ItemGroup>
+      <ResolvedFileToPublish
+        Include="$(TargetDir)$(AssemblyName).pri"
+        RelativePath="$(AssemblyName).pri"
+        CopyToPublishDirectory="PreserveNewest"
+        Condition="Exists('$(TargetDir)$(AssemblyName).pri')" />
+    </ItemGroup>
+  </Target>
 
 </Project>

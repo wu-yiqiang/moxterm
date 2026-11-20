@@ -37,7 +37,8 @@
             <NavigationView.MenuItems>
                 <NavigationViewItem Content="{x:Bind Loc.NavTerminal, Mode=OneWay}" Tag="terminal">
                     <NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xE756;" />
+                        <!-- 会话图标：对话气泡 -->
+                        <FontIcon Glyph="&#xE8BD;" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
 

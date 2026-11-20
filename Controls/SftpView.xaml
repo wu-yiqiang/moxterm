@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="MoxTerm.Controls.SftpView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:services="using:MoxTerm.Services"
+    AllowDrop="True">
+
+    <UserControl.Resources>
+        <!-- 文件列表行：名称、大小、修改时间 -->
+        <DataTemplate x:Key="EntryTemplate" x:DataType="services:FileEntry">
+            <Grid Padding="2,4" ColumnSpacing="12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Text="{x:Bind DisplayName}" TextTrimming="CharacterEllipsis" />
+                <TextBlock
+                    Grid.Column="1"
+                    Width="76"
+                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                    Text="{x:Bind SizeText}"
+                    TextAlignment="Right" />
+                <TextBlock
+                    Grid.Column="2"
+                    Width="118"
+                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                    Text="{x:Bind ModifiedText}" />
+            </Grid>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <!-- 整个面板都接受拖放：从资源管理器拖入文件/文件夹即上传到当前远程目录 -->
+    <Grid
+        Padding="12"
+        AllowDrop="True"
+        RowSpacing="8">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- 工具栏 -->
+        <StackPanel
+            Grid.Row="0"
+            Orientation="Horizontal"
+            Spacing="8">
+            <Button
+                x:Name="UploadButton"
+                Click="OnUploadClick"
+                Content="{x:Bind Loc.SftpUpload, Mode=OneWay}"
+                IsEnabled="False" />
+            <Button
+                x:Name="DownloadButton"
+                Click="OnDownloadClick"
+                Content="{x:Bind Loc.SftpDownload, Mode=OneWay}"
+                IsEnabled="False" />
+            <Button
+                x:Name="NewFolderButton"
+                Click="OnNewFolderClick"
+                Content="{x:Bind Loc.SftpNewFolder, Mode=OneWay}"
+                IsEnabled="False" />
+            <Button
+                x:Name="RenameButton"
+                Click="OnRenameClick"
+                Content="{x:Bind Loc.SftpRename, Mode=OneWay}"
+                IsEnabled="False" />
+            <Button
+                x:Name="DeleteButton"
+                Click="OnDeleteClick"
+                Content="{x:Bind Loc.DeleteSession, Mode=OneWay}"
+                IsEnabled="False" />
+            <Button
+                x:Name="RefreshButton"
+                Click="OnRefreshClick"
+                Content="{x:Bind Loc.SftpRefresh, Mode=OneWay}"
+                IsEnabled="False" />
+        </StackPanel>
+
+        <!-- 左：本地；右：远程 -->
+        <Grid Grid.Row="1" ColumnSpacing="12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <Grid RowSpacing="6">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="{x:Bind Loc.SftpLocal, Mode=OneWay}" />
+
+                <Grid Grid.Row="1" ColumnSpacing="6">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBox
+                        x:Name="LocalPathBox"
+                        KeyDown="OnLocalPathKeyDown" />
+                    <Button
+                        Grid.Column="1"
+                        AutomationProperties.Name="{x:Bind Loc.SftpUp, Mode=OneWay}"
+                        Click="OnLocalUpClick"
+                        ToolTipService.ToolTip="{x:Bind Loc.SftpUp, Mode=OneWay}">
+                        <FontIcon FontSize="14" Glyph="&#xE74A;" />
+                    </Button>
+                </Grid>
+
+                <Grid Grid.Row="2">
+                    <!-- 本地列表：可整行拖到右侧远程列表上传 -->
+                    <ListView
+                        x:Name="LocalList"
+                        CanDragItems="True"
+                        DoubleTapped="OnLocalDoubleTapped"
+                        DragItemsCompleted="OnLocalDragItemsCompleted"
+                        DragItemsStarting="OnLocalDragItemsStarting"
+                        ItemTemplate="{StaticResource EntryTemplate}"
+                        SelectionChanged="OnSelectionChanged"
+                        SelectionMode="Extended" />
+                    <!-- 框选矩形绘制层，不参与命中测试 -->
+                    <Canvas x:Name="LocalBandLayer" IsHitTestVisible="False" />
+                </Grid>
+            </Grid>
+
+            <Grid Grid.Column="1" RowSpacing="6">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="{x:Bind Loc.SftpRemote, Mode=OneWay}" />
+
+                <Grid Grid.Row="1" ColumnSpacing="6">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBox
+                        x:Name="RemotePathBox"
+                        KeyDown="OnRemotePathKeyDown" />
+                    <Button
+                        Grid.Column="1"
+                        AutomationProperties.Name="{x:Bind Loc.SftpUp, Mode=OneWay}"
+                        Click="OnRemoteUpClick"
+                        ToolTipService.ToolTip="{x:Bind Loc.SftpUp, Mode=OneWay}">
+                        <FontIcon FontSize="14" Glyph="&#xE74A;" />
+                    </Button>
+                </Grid>
+
+                <!-- 远程列表（拖放由面板根容器统一处理） -->
+                <Grid Grid.Row="2">
+                    <ListView
+                        x:Name="RemoteList"
+                        DoubleTapped="OnRemoteDoubleTapped"
+                        ItemTemplate="{StaticResource EntryTemplate}"
+                        SelectionChanged="OnSelectionChanged"
+                        SelectionMode="Extended" />
+                    <!-- 框选矩形绘制层，不参与命中测试 -->
+                    <Canvas x:Name="RemoteBandLayer" IsHitTestVisible="False" />
+                </Grid>
+            </Grid>
+        </Grid>
+
+        <!-- 状态栏 -->
+        <StackPanel Grid.Row="2" Spacing="4">
+            <ProgressBar
+                x:Name="TransferBar"
+                Maximum="100"
+                Visibility="Collapsed" />
+            <TextBlock
+                x:Name="StatusText"
+                Style="{StaticResource CaptionTextBlockStyle}"
+                TextWrapping="Wrap" />
+        </StackPanel>
+    </Grid>
+</UserControl>

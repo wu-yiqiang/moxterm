@@ -141,4 +141,18 @@ internal static class NativeMethods
     /// <summary>当前系统的 OEM 代码页（中文系统为 936）。管道模式下 Shell 按该代码页输出。</summary>
     [DllImport("kernel32.dll")]
     internal static extern uint GetOEMCP();
+
+    // 主窗口消息子类化：用于捕获最小化（WM_SIZE / SIZE_MINIMIZED）
+    internal const int WM_SIZE = 0x0005;
+    internal const int SIZE_MINIMIZED = 1;
+
+    internal delegate IntPtr SubclassProc(
+        IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam, IntPtr id, IntPtr data);
+
+    [DllImport("comctl32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool SetWindowSubclass(IntPtr hWnd, SubclassProc callback, IntPtr id, IntPtr data);
+
+    [DllImport("comctl32.dll")]
+    internal static extern IntPtr DefSubclassProc(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
 }

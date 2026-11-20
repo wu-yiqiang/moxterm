@@ -165,6 +165,21 @@ public sealed partial class TerminalPage : Page
         Tabs.SelectedItem = tab;
     }
 
+    /// <summary>SFTP 标签页：承载双栏文件面板而不是终端。</summary>
+    private void CreateSftpSession(ShellProfile profile)
+    {
+        var tab = new TabViewItem
+        {
+            Header = profile.Name,
+            IconSource = new SymbolIconSource { Symbol = Symbol.Folder },
+            Content = new SftpView { Profile = profile },
+            IsClosable = true,
+        };
+
+        Tabs.TabItems.Add(tab);
+        Tabs.SelectedItem = tab;
+    }
+
     /// <summary>
     /// Tab 栏加号：列出本地 Shell、已保存的会话，以及“新建连接”入口——
     /// 协议（SSH / Telnet / 串口）在新建连接对话框里选择，菜单里不再逐个列出。
@@ -671,7 +686,13 @@ public sealed partial class TerminalPage : Page
                 break;
 
             case SessionProtocol.Sftp:
-                CreateSession(new ShellProfile(name, SystemExecutable(@"OpenSSH\sftp.exe"), $"-P {port} \"{target}\"", Password: password));
+                CreateSftpSession(new ShellProfile(
+                    name,
+                    "",
+                    Host: host,
+                    Port: port,
+                    Username: user,
+                    Password: password));
                 break;
 
             case SessionProtocol.Ftp:
@@ -774,41 +795,9 @@ public sealed partial class TerminalPage : Page
 
     /// <summary>
     /// WinUI 的 ContentDialog 固定按“主按钮在左、关闭按钮在右”排布按钮。
-    /// 这里把两者的位置对调，让“连接”落在右侧。模板里的按钮容器可能是
-    /// 带列定义的 Grid（按 Grid.Column 定位），也可能是横向 StackPanel（按顺序排列）。
+    /// 这里把两者的位置对调，让“连接”落在右侧。
     /// </summary>
-    private static void SwapDialogButtons(ContentDialog dialog)
-    {
-        if (FindVisualChild<Button>(dialog, "PrimaryButton") is not { } primary ||
-            FindVisualChild<Button>(dialog, "CloseButton") is not { } close ||
-            !ReferenceEquals(primary.Parent, close.Parent))
-        {
-            return;
-        }
-
-        switch (close.Parent)
-        {
-            case Grid { ColumnDefinitions.Count: > 1 } grid:
-                var primaryColumn = Grid.GetColumn(primary);
-                Grid.SetColumn(primary, Grid.GetColumn(close));
-                Grid.SetColumn(close, primaryColumn);
-                break;
-
-            case StackPanel panel:
-                var primaryIndex = panel.Children.IndexOf(primary);
-                var closeIndex = panel.Children.IndexOf(close);
-                if (primaryIndex < 0 || closeIndex < 0)
-                {
-                    return;
-                }
-
-                panel.Children.Remove(primary);
-                panel.Children.Remove(close);
-                panel.Children.Insert(Math.Min(primaryIndex, closeIndex), close);
-                panel.Children.Insert(Math.Max(primaryIndex, closeIndex), primary);
-                break;
-        }
-    }
+    private static void SwapDialogButtons(ContentDialog dialog) => DialogHelper.SwapButtons(dialog);
 
     /// <summary>
     /// 系统自带客户端的可执行文件：优先用 System32 下的绝对路径（非打包应用不保证 PATH 里有），
@@ -827,6 +816,10 @@ public sealed partial class TerminalPage : Page
             if (tab.Content is TerminalView view)
             {
                 view.Dispose();
+            }
+            else if (tab.Content is SftpView sftp)
+            {
+                sftp.Dispose();
             }
 
             sender.TabItems.Remove(tab);
