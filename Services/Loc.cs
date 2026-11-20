@@ -116,9 +116,8 @@ public sealed class Loc : INotifyPropertyChanged
     public string DefaultShellDesc => T("新建会话时使用的 Shell", "Shell used for new sessions");
     public string WorkingDir => T("起始目录", "Working directory");
     public string WorkingDirEmpty => T("留空则使用进程当前目录。", "Leave empty to use the current process directory.");
-    public string WorkingDirInvalid => T("目录不存在，不会被保存。", "Directory doesn't exist and won't be saved.");
+    public string WorkingDirReset => T("恢复默认（使用进程当前目录）", "Reset to default (process directory)");
     public string Browse => T("浏览", "Browse");
-    public string UseParentDir => T("使用父进程目录", "Use parent process directory");
     public string Scrollback => T("回滚缓冲行数", "Scrollback lines");
     public string ScrollbackDesc => T("保留的历史输出行数，取值 200 – 100000", "History lines kept, 200 – 100000");
     public string CursorShape => T("光标形状", "Cursor shape");

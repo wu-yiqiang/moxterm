@@ -105,9 +105,6 @@ public sealed partial class SettingsPage : Page
                 shells.FirstOrDefault(shell => shell.Name == settings.DefaultShell) ?? shells.FirstOrDefault();
 
             WorkingDirectoryBox.Text = settings.WorkingDirectory ?? string.Empty;
-            UseParentDirCheckBox.IsChecked = string.IsNullOrEmpty(settings.WorkingDirectory);
-            UpdateWorkingDirectoryState();
-            UpdateWorkingDirectoryHint();
 
             ScrollbackBox.Value = settings.ScrollbackLines;
             CursorStyleComboBox.SelectedItem = TerminalCursorOption.FromName(settings.CursorStyle);
@@ -223,98 +220,7 @@ public sealed partial class SettingsPage : Page
         ApplyAndSave();
     }
 
-    private void OnWorkingDirectoryLostFocus(object sender, RoutedEventArgs e)
-    {
-        if (_loading || UseParentDirCheckBox.IsChecked == true)
-        {
-            return;
-        }
-
-        var text = WorkingDirectoryBox.Text.Trim();
-
-        // 留空时自动切回“使用父进程目录”；填了不存在的目录则保留输入并提示，不写入设置
-        if (text.Length == 0)
-        {
-            UseParentDirCheckBox.IsChecked = true;
-            return;
-        }
-
-        if (!Directory.Exists(text))
-        {
-            UpdateWorkingDirectoryHint();
-            return;
-        }
-
-        App.Settings.Current.WorkingDirectory = text;
-        UpdateWorkingDirectoryHint();
-        ApplyAndSave();
-    }
-
-    /// <summary>根据“使用父进程目录”复选框状态联动启用/禁用输入框与浏览按钮。</summary>
-    private void UpdateWorkingDirectoryState()
-    {
-        var useParent = UseParentDirCheckBox.IsChecked == true;
-        WorkingDirectoryBox.IsEnabled = !useParent;
-        BrowseButton.IsEnabled = !useParent;
-    }
-
-    private void OnUseParentDirToggled(object sender, RoutedEventArgs e)
-    {
-        UpdateWorkingDirectoryState();
-
-        if (_loading)
-        {
-            return;
-        }
-
-        if (UseParentDirCheckBox.IsChecked == true)
-        {
-            // 使用父进程目录：清空路径并写入 null
-            WorkingDirectoryBox.Text = string.Empty;
-            App.Settings.Current.WorkingDirectory = null;
-        }
-        else
-        {
-            // 取消勾选：若输入框已有有效目录则写入，否则留空等用户输入
-            var text = WorkingDirectoryBox.Text.Trim();
-            App.Settings.Current.WorkingDirectory =
-                text.Length > 0 && Directory.Exists(text) ? text : null;
-        }
-
-        UpdateWorkingDirectoryHint();
-        ApplyAndSave();
-    }
-
-    /// <summary>折叠/展开起始目录的详细设置区。</summary>
-    private void OnWorkingDirHeaderClick(object sender, RoutedEventArgs e)
-    {
-        var expand = WorkingDirPanel.Visibility == Visibility.Collapsed;
-        WorkingDirPanel.Visibility = expand ? Visibility.Visible : Visibility.Collapsed;
-        WorkingDirChevron.Glyph = expand ? "\uE70E" : "\uE70D"; // 展开上箭头 / 收起下箭头
-    }
-
-    private void UpdateWorkingDirectoryHint()
-    {
-        if (UseParentDirCheckBox.IsChecked == true)
-        {
-            WorkingDirectorySummary.Text = Loc.UseParentDir;
-            return;
-        }
-
-        var text = WorkingDirectoryBox.Text.Trim();
-
-        if (text.Length == 0)
-        {
-            WorkingDirectorySummary.Text = Loc.WorkingDirEmpty;
-            return;
-        }
-
-        WorkingDirectorySummary.Text = Directory.Exists(text)
-            ? text
-            : Loc.WorkingDirInvalid;
-    }
-
-    /// <summary>打开文件夹选择器，用所选目录填充起始目录输入框并保存。</summary>
+    /// <summary>打开文件夹选择器，用所选目录填充起始目录并保存。</summary>
     private async void OnBrowseClick(object sender, RoutedEventArgs e)
     {
         if (App.Shell is null)
@@ -338,11 +244,17 @@ public sealed partial class SettingsPage : Page
             return;
         }
 
-        // 选择了具体目录即意味着不再使用父进程目录；
-        // 先填入路径再取消勾选，OnUseParentDirToggled 会读取有效路径并保存
         WorkingDirectoryBox.Text = folder.Path;
-        UseParentDirCheckBox.IsChecked = false;
-        UpdateWorkingDirectoryHint();
+        App.Settings.Current.WorkingDirectory = folder.Path;
+        ApplyAndSave();
+    }
+
+    /// <summary>恢复默认：清空起始目录，沿用进程当前目录。</summary>
+    private void OnWorkingDirReset(object sender, RoutedEventArgs e)
+    {
+        WorkingDirectoryBox.Text = string.Empty;
+        App.Settings.Current.WorkingDirectory = null;
+        ApplyAndSave();
     }
 
     private void OnScrollbackChanged(NumberBox sender, NumberBoxValueChangedEventArgs args)
