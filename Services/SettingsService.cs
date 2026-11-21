@@ -31,7 +31,7 @@ public sealed class AppSettings
     public string ColorScheme { get; set; } = TerminalColorScheme.FollowTheme.Key;
 
     /// <summary>回滚缓冲行数。</summary>
-    public int ScrollbackLines { get; set; } = 2000;
+    public int ScrollbackLines { get; set; } = 1000;
 
     /// <summary>光标形状，取值对应 <see cref="TerminalCursorStyle"/>。</summary>
     public string CursorStyle { get; set; } = nameof(TerminalCursorStyle.Block);
