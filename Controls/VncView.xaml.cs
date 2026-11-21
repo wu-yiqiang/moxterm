@@ -18,10 +18,12 @@ public sealed partial class VncView : UserControl
 {
     private VncSession? _session;
     private WriteableBitmap? _bitmap;
+    private Stream? _pixelStream;
     private bool _disposed;
     private bool _pointerPressed;
     private bool _shiftDown;
     private bool _frameShown;
+    private bool _connecting;
     private int _buttons;
     private int _width;
     private int _height;
@@ -51,6 +53,8 @@ public sealed partial class VncView : UserControl
 
         _disposed = true;
         DetachSession();
+        _pixelStream?.Dispose();
+        _pixelStream = null;
     }
 
     private async void OnLoaded(object sender, RoutedEventArgs e) => await ConnectAsync();
@@ -73,11 +77,12 @@ public sealed partial class VncView : UserControl
 
     private async Task ConnectAsync()
     {
-        if (_disposed)
+        if (_disposed || _connecting)
         {
             return;
         }
 
+        _connecting = true;
         DetachSession();
         SetStatus(Loc.VncConnecting);
         InfoText.Text = string.Empty;
@@ -124,6 +129,10 @@ public sealed partial class VncView : UserControl
             HideOverlay();
             SetStatus($"{Loc.VncConnectFailed} {ex.Message}");
         }
+        finally
+        {
+            _connecting = false;
+        }
     }
 
     private void ShowOverlay(string text)
@@ -141,9 +150,11 @@ public sealed partial class VncView : UserControl
 
     private void CreateBitmap(int width, int height)
     {
+        _pixelStream?.Dispose();
         _width = width;
         _height = height;
         _bitmap = new WriteableBitmap(width, height);
+        _pixelStream = _bitmap.PixelBuffer.AsStream();
         Screen.Source = _bitmap;
     }
 
@@ -171,20 +182,29 @@ public sealed partial class VncView : UserControl
     private void ApplyRect(VncRect rect)
     {
         var bitmap = _bitmap;
-        if (bitmap is null || rect.Width <= 0 || rect.Height <= 0)
+        var stream = _pixelStream;
+        if (bitmap is null || stream is null || rect.Width <= 0 || rect.Height <= 0)
         {
             return;
         }
 
         try
         {
-            using var stream = bitmap.PixelBuffer.AsStream();
             var rowBytes = rect.Width * 4;
 
-            for (var row = 0; row < rect.Height; row++)
+            if (rect.X == 0 && rect.Width == _width)
             {
-                stream.Seek(((rect.Y + row) * _width + rect.X) * 4, SeekOrigin.Begin);
-                stream.Write(rect.Pixels, row * rowBytes, rowBytes);
+                // 整行矩形（整屏刷新最常见）直接一次写完，避免逐行 Seek
+                stream.Seek((long)rect.Y * _width * 4, SeekOrigin.Begin);
+                stream.Write(rect.Pixels, 0, rowBytes * rect.Height);
+            }
+            else
+            {
+                for (var row = 0; row < rect.Height; row++)
+                {
+                    stream.Seek(((rect.Y + row) * _width + rect.X) * 4, SeekOrigin.Begin);
+                    stream.Write(rect.Pixels, row * rowBytes, rowBytes);
+                }
             }
 
             bitmap.Invalidate();

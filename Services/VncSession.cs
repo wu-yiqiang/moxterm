@@ -27,7 +27,11 @@ public sealed class VncSession : IDisposable
     private NetworkStream? _stream;
     private Thread? _reader;
     private byte[] _framebuffer = [];
+    private readonly byte[] _numberBuffer = new byte[4];
     private volatile bool _disposed;
+
+    /// <summary>尺寸变化后需要重新请求整屏，否则新区域会一直空白。</summary>
+    private bool _needFullUpdate;
 
     /// <summary>Apple 屏幕共享（RFB 003.889）实际按 G/B 交换的顺序发像素，需要本地纠正。</summary>
     private bool _swapGreenBlue;
@@ -211,7 +215,7 @@ public sealed class VncSession : IDisposable
         Write(VncAuth.Encrypt(challenge, _password));
     }
 
-    private static string ReadReason(NetworkStream stream)
+    private string ReadReason(NetworkStream stream)
     {
         var length = ReadInt32(stream);
         return length > 0 ? Encoding.UTF8.GetString(ReadExact(stream, length)) : "服务器拒绝连接";
@@ -232,7 +236,8 @@ public sealed class VncSession : IDisposable
                 {
                     case 0:
                         ReadFramebufferUpdate();
-                        SendUpdateRequest(incremental: true);
+                        SendUpdateRequest(incremental: !_needFullUpdate);
+                        _needFullUpdate = false;
                         break;
 
                     case 1:
@@ -286,8 +291,11 @@ public sealed class VncSession : IDisposable
             {
                 case EncodingRaw:
                     var pixels = ReadExact(width * height * 4);
-                    ApplyRaw(x, y, width, height, pixels);
-                    RectUpdated?.Invoke(new VncRect(x, y, width, height, pixels));
+                    if (ApplyRaw(x, y, width, height, pixels))
+                    {
+                        RectUpdated?.Invoke(new VncRect(x, y, width, height, pixels));
+                    }
+
                     break;
 
                 case EncodingCopyRect:
@@ -306,22 +314,31 @@ public sealed class VncSession : IDisposable
         }
     }
 
-    private void ApplyRaw(int x, int y, int width, int height, byte[] pixels)
+    /// <summary>把一块 Raw 像素写进本地缓存；矩形越界（尺寸切换瞬间）时丢弃。</summary>
+    private bool ApplyRaw(int x, int y, int width, int height, byte[] pixels)
     {
+        if (width <= 0 || height <= 0 || x + width > Width || y + height > Height)
+        {
+            return false;
+        }
+
         // Apple 的服务器无视 SetPixelFormat 的通道位移，实际发来的是 G/B 对调的顺序，
         // 这里交换前两个字节，否则绿色和蓝色会互换（画面偏黄/偏紫）。
         if (_swapGreenBlue)
         {
-            for (var index = 0; index + 2 < pixels.Length; index += 4)
+            for (var index = 0; index + 3 < pixels.Length; index += 4)
             {
                 (pixels[index], pixels[index + 1]) = (pixels[index + 1], pixels[index]);
+                pixels[index + 3] = 255;
             }
         }
-
-        // 写死不透明，避免 WriteableBitmap 因 alpha=0 把区域渲染成透明
-        for (var index = 3; index < pixels.Length; index += 4)
+        else
         {
-            pixels[index] = 255;
+            // 写死不透明，避免 WriteableBitmap 因 alpha=0 把区域渲染成透明
+            for (var index = 3; index < pixels.Length; index += 4)
+            {
+                pixels[index] = 255;
+            }
         }
 
         for (var row = 0; row < height; row++)
@@ -333,10 +350,22 @@ public sealed class VncSession : IDisposable
                 ((y + row) * Width + x) * 4,
                 width * 4);
         }
+
+        return true;
     }
 
     private void ApplyCopyRect(int x, int y, int width, int height, int sourceX, int sourceY)
     {
+        if (width <= 0
+            || height <= 0
+            || x + width > Width
+            || y + height > Height
+            || sourceX + width > Width
+            || sourceY + height > Height)
+        {
+            return;
+        }
+
         var copy = new byte[width * height * 4];
 
         for (var row = 0; row < height; row++)
@@ -367,6 +396,7 @@ public sealed class VncSession : IDisposable
         Width = width;
         Height = height;
         _framebuffer = new byte[width * height * 4];
+        _needFullUpdate = true;
         Resized?.Invoke(width, height);
     }
 
@@ -447,8 +477,14 @@ public sealed class VncSession : IDisposable
     private static byte[] ReadExact(NetworkStream stream, int count)
     {
         var buffer = new byte[count];
-        var offset = 0;
+        ReadInto(stream, buffer, count);
+        return buffer;
+    }
 
+    /// <summary>读满指定字节数；小整数读取复用同一个缓冲区，避免每帧产生大量小数组。</summary>
+    private static void ReadInto(NetworkStream stream, byte[] buffer, int count)
+    {
+        var offset = 0;
         while (offset < count)
         {
             var read = stream.Read(buffer, offset, count - offset);
@@ -459,20 +495,18 @@ public sealed class VncSession : IDisposable
 
             offset += read;
         }
-
-        return buffer;
     }
 
-    private static ushort ReadUInt16(NetworkStream stream)
+    private ushort ReadUInt16(NetworkStream stream)
     {
-        var bytes = ReadExact(stream, 2);
-        return (ushort)((bytes[0] << 8) | bytes[1]);
+        ReadInto(stream, _numberBuffer, 2);
+        return (ushort)((_numberBuffer[0] << 8) | _numberBuffer[1]);
     }
 
-    private static int ReadInt32(NetworkStream stream)
+    private int ReadInt32(NetworkStream stream)
     {
-        var bytes = ReadExact(stream, 4);
-        return (bytes[0] << 24) | (bytes[1] << 16) | (bytes[2] << 8) | bytes[3];
+        ReadInto(stream, _numberBuffer, 4);
+        return (_numberBuffer[0] << 24) | (_numberBuffer[1] << 16) | (_numberBuffer[2] << 8) | _numberBuffer[3];
     }
 
     public void Dispose()
