@@ -165,14 +165,29 @@ public sealed partial class TerminalPage : Page
         Tabs.SelectedItem = tab;
     }
 
-    /// <summary>SFTP 标签页：承载双栏文件面板而不是终端。</summary>
-    private void CreateSftpSession(ShellProfile profile)
+    /// <summary>VNC 标签页：显示远端桌面。</summary>
+    private void CreateVncSession(ShellProfile profile)
+    {
+        var tab = new TabViewItem
+        {
+            Header = profile.Name,
+            IconSource = new SymbolIconSource { Symbol = Symbol.Remote },
+            Content = new VncView { Profile = profile },
+            IsClosable = true,
+        };
+
+        Tabs.TabItems.Add(tab);
+        Tabs.SelectedItem = tab;
+    }
+
+    /// <summary>远程文件面板标签页（SFTP / FTP）：承载双栏文件面板而不是终端。</summary>
+    private void CreateSftpSession(ShellProfile profile, string protocolKey = SessionProtocol.Sftp)
     {
         var tab = new TabViewItem
         {
             Header = profile.Name,
             IconSource = new SymbolIconSource { Symbol = Symbol.Folder },
-            Content = new SftpView { Profile = profile },
+            Content = new SftpView { Profile = profile, ProtocolKey = protocolKey },
             IsClosable = true,
         };
 
@@ -695,9 +710,26 @@ public sealed partial class TerminalPage : Page
                     Password: password));
                 break;
 
+            case SessionProtocol.Vnc:
+                CreateVncSession(new ShellProfile(
+                    name,
+                    "",
+                    Host: host,
+                    Port: port,
+                    Password: password));
+                break;
+
             case SessionProtocol.Ftp:
-                // ftp.exe 不支持指定端口（固定 21），先不自动登录，用户名与密码交给终端回填
-                CreateSession(new ShellProfile(name, SystemExecutable("ftp.exe"), $"-n \"{host}\"", Username: user, Password: password));
+                // FTP 与 SFTP 共用一套双栏文件面板，支持上传/下载、重命名、删除等
+                CreateSftpSession(
+                    new ShellProfile(
+                        name,
+                        "",
+                        Host: host,
+                        Port: port,
+                        Username: user,
+                        Password: password),
+                    SessionProtocol.Ftp);
                 break;
 
             case SessionProtocol.Telnet:
@@ -820,6 +852,10 @@ public sealed partial class TerminalPage : Page
             else if (tab.Content is SftpView sftp)
             {
                 sftp.Dispose();
+            }
+            else if (tab.Content is VncView vnc)
+            {
+                vnc.Dispose();
             }
 
             sender.TabItems.Remove(tab);

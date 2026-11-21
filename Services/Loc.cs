@@ -152,6 +152,14 @@ public sealed class Loc : INotifyPropertyChanged
     public string CursorBlinkDesc => T("仅在终端获得焦点时闪烁", "Blink only while the terminal is focused");
     public string Backend => T("终端后端", "Terminal backend");
 
+    // VNC 远程桌面
+    public string VncReconnect => T("重新连接", "Reconnect");
+    public string VncConnecting => T("正在连接…", "Connecting…");
+    public string VncLoadingFrame => T("正在加载画面…", "Loading screen…");
+    public string VncConnected(int width, int height) => T($"已连接（{width} × {height}）", $"Connected ({width} × {height})");
+    public string VncConnectFailed => T("连接失败：", "Connection failed: ");
+    public string VncDisconnected => T("连接已断开：", "Disconnected: ");
+
     // 窗口
     public string GroupWindow => T("窗口", "Window");
     public string HideOnMinimize => T("最小化时在通知区域隐藏终端", "Hide the terminal in the notification area when minimized");

@@ -31,6 +31,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="FluentFTP" Version="55.1.0" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.250916003" />
     <PackageReference Include="SSH.NET" Version="2026.0.1" />
     <!-- SSH 密码用 DPAPI（当前用户）加密存储 -->
@@ -52,11 +53,7 @@
   -->
   <Target Name="IncludePriInPublish" AfterTargets="ComputeFilesToPublish">
     <ItemGroup>
-      <ResolvedFileToPublish
-        Include="$(TargetDir)$(AssemblyName).pri"
-        RelativePath="$(AssemblyName).pri"
-        CopyToPublishDirectory="PreserveNewest"
-        Condition="Exists('$(TargetDir)$(AssemblyName).pri')" />
+      <ResolvedFileToPublish Include="$(TargetDir)$(AssemblyName).pri" RelativePath="$(AssemblyName).pri" CopyToPublishDirectory="PreserveNewest" Condition="Exists('$(TargetDir)$(AssemblyName).pri')" />
     </ItemGroup>
   </Target>
   <!--
@@ -67,12 +64,8 @@
   -->
   <Target Name="TrimUnusedPublishPayload" AfterTargets="ComputeFilesToPublish">
     <ItemGroup>
-      <ResolvedFileToPublish
-        Remove="@(ResolvedFileToPublish)"
-        Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('%(Filename)', '^(onnxruntime.*|DirectML|Microsoft\.Windows\.AI.*|Microsoft\.Windows\.Widgets.*|Microsoft\.ML\.OnnxRuntime.*)$'))" />
-      <ResolvedFileToPublish
-        Remove="@(ResolvedFileToPublish)"
-        Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('%(RelativePath)', '^NpuDetect[/\\]'))" />
+      <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('%(Filename)', '^(onnxruntime.*|DirectML|Microsoft\.Windows\.AI.*|Microsoft\.Windows\.Widgets.*|Microsoft\.ML\.OnnxRuntime.*)$'))" />
+      <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('%(RelativePath)', '^NpuDetect[/\\]'))" />
       <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition="'%(Extension)' == '.pdb'" />
     </ItemGroup>
   </Target>

@@ -9,6 +9,7 @@
     ".NETCoreApp,Version=v10.0/win-x64": {
       "MoxTerm/1.0.0": {
         "dependencies": {
+          "FluentFTP": "55.1.0",
           "Microsoft.WindowsAppSDK": "1.8.250916003",
           "SSH.NET": "2026.0.1",
           "System.IO.Ports": "10.0.0",
@@ -782,6 +783,15 @@
           }
         }
       },
+      "FluentFTP/55.1.0": {
+        "runtime": {
+          "lib/net9.0/FluentFTP.dll": {
+            "assemblyVersion": "55.1.0.0",
+            "fileVersion": "55.1.0.0",
+            "localPath": "FluentFTP.dll"
+          }
+        }
+      },
       "Microsoft.Extensions.DependencyInjection.Abstractions/8.0.2": {
         "runtime": {
           "lib/net8.0/Microsoft.Extensions.DependencyInjection.Abstractions.dll": {
@@ -1091,6 +1101,13 @@
       "sha512": "sha512-U+12df8UEWHgBi04YVf/Lgi2dy3SItlIYvHjjEVa/BngCQIzDCDRBk50DDByCfDvSbe5pRNFr3b7UrVK2kMcLw==",
       "path": "bouncycastle.cryptography/2.7.0",
       "hashPath": "bouncycastle.cryptography.2.7.0.nupkg.sha512"
+    },
+    "FluentFTP/55.1.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-RXA6WEaziJiSt/lrOxbpxfkOyTY1YaeQiCKzsVoQQxEwcoI0dtoTzGiqS47mrqq3zBuETMwaVjI7FLTCcJC80w==",
+      "path": "fluentftp/55.1.0",
+      "hashPath": "fluentftp.55.1.0.nupkg.sha512"
     },
     "Microsoft.Extensions.DependencyInjection.Abstractions/8.0.2": {
       "type": "package",

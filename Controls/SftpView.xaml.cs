@@ -9,12 +9,12 @@ using Windows.System;
 namespace MoxTerm.Controls;
 
 /// <summary>
-/// SFTP 文件面板：左侧本地目录、右侧远程目录，支持进入目录、上传、下载、
+/// 远程文件面板（SFTP / FTP 共用）：左侧本地目录、右侧远程目录，支持进入目录、上传、下载、
 /// 新建文件夹、重命名与删除。所有网络操作在后台线程执行，避免阻塞界面。
 /// </summary>
 public sealed partial class SftpView : UserControl
 {
-    private SftpSession? _session;
+    private RemoteFileSystem? _session;
     private bool _busy;
     private bool _disposed;
     private string _localPath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
@@ -25,6 +25,9 @@ public sealed partial class SftpView : UserControl
 
     /// <summary>连接参数，由调用方在加入可视树之前赋值。</summary>
     public ShellProfile Profile { get; set; } = new("SFTP", "");
+
+    /// <summary>远程协议标识：<c>sftp</c>（默认）或 <c>ftp</c>。</summary>
+    public string ProtocolKey { get; set; } = SessionProtocol.Sftp;
 
     /// <summary>界面文案源。</summary>
     private Loc Loc => Loc.Instance;
@@ -73,11 +76,7 @@ public sealed partial class SftpView : UserControl
 
         try
         {
-            var session = new SftpSession(
-                Profile.Host ?? string.Empty,
-                Profile.Port,
-                Profile.Username ?? string.Empty,
-                Profile.Password ?? string.Empty);
+            var session = RemoteFileSystemFactory.Create(Profile, ProtocolKey);
 
             await Task.Run(session.Connect);
 
@@ -94,7 +93,7 @@ public sealed partial class SftpView : UserControl
             await RefreshRemoteAsync();
             SetStatus(string.Empty);
         }
-        catch (Renci.SshNet.Common.SshAuthenticationException)
+        catch (Exception ex) when (ex is Renci.SshNet.Common.SshAuthenticationException or FluentFTP.Exceptions.FtpAuthenticationException)
         {
             // 服务器拒绝认证：通常是保存的密码已过期，需要编辑该连接重新输入
             SetStatus(Loc.SftpAuthFailed);
@@ -486,7 +485,7 @@ public sealed partial class SftpView : UserControl
             return;
         }
 
-        var path = SftpSession.CombineRemote(_remotePath, name);
+        var path = RemoteFileSystem.CombineRemote(_remotePath, name);
         SetBusy(true);
 
         try
