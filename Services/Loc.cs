@@ -217,7 +217,7 @@ public sealed class Loc : INotifyPropertyChanged
     public string GroupTools => T("工具", "Tools");
     public string GroupServers => T("服务器", "Servers");
     public string NavNetServices => T("网络服务", "Network services");
-    public string NavTunneling => T("SSH 隧道（端口转发）", "SSH tunnel (port forwarding)");
+    public string NavTunneling => T("隧道", "Tunnel");
     public string NavKeyGen => T("SSH 密钥生成器", "SSH key generator");
     public string NavOpenPorts => T("列出开放端口", "List open ports");
     public string NavWakeOnLan => T("Wake On Lan", "Wake On Lan");
@@ -282,39 +282,141 @@ public sealed class Loc : INotifyPropertyChanged
         T("结果导出", "Result export"),
     ];
 
-    // 端口扫描
-    public string FeaturePortScanDesc => T(
-        "探测目标主机开放的端口。",
-        "Probe open ports on a target host.");
-    public IReadOnlyList<string> FeaturePortScanItems =>
-    [
-        T("常见端口快速扫描", "Quick scan of common ports"),
-        T("自定义端口范围", "Custom port ranges"),
-        T("服务 Banner 识别", "Service banner grabbing"),
-    ];
+    // SSH 隧道（端口转发）页面
+    public string TunnelSubtitle => T(
+        "通过 SSH 建立加密隧道：把远程服务映射到本地，或把本地服务发布到远程。",
+        "Encrypted tunnels over SSH: map remote services locally, or publish local services remotely.");
+    public string TunnelNew => T("新建隧道", "New tunnel");
+    public string TunnelStart => T("启动", "Start");
+    public string TunnelStop => T("停止", "Stop");
+    public string TunnelEmpty => T(
+        "还没有隧道。点击“新建隧道”添加一条。",
+        "No tunnels yet. Click \"New tunnel\" to add one.");
+    public string TunnelTypeLocal => T("本地转发", "Local");
+    public string TunnelTypeRemote => T("远程转发", "Remote");
+    public string TunnelTypeDynamic => T("动态 SOCKS", "Dynamic SOCKS");
+    public string TunnelStateStopped => T("已停止", "Stopped");
+    public string TunnelStateConnecting => T("正在连接…", "Connecting…");
+    public string TunnelStateRunning => T("运行中", "Running");
+    public string TunnelStateFailed => T("失败", "Failed");
+    public string TunnelStarted(string name) => T($"隧道“{name}”已启动。", $"Tunnel \"{name}\" started.");
+    public string TunnelStopped(string name) => T($"隧道“{name}”已停止。", $"Tunnel \"{name}\" stopped.");
+    public string TunnelStartFailed(string message) => T($"启动隧道失败：{message}", $"Failed to start the tunnel: {message}");
+    public string TunnelDeleteConfirm(string name) => T($"确定删除隧道“{name}”吗？", $"Delete tunnel \"{name}\"?");
+    public string TunnelDialogNew => T("新建隧道", "New tunnel");
+    public string TunnelDialogEdit => T("编辑隧道", "Edit tunnel");
+    public string TunnelNameLabel => T("名称", "Name");
+    public string TunnelNamePlaceholder => T("可选，默认使用监听端口", "Optional, defaults to the listen port");
+    public string TunnelTypeLabel => T("类型", "Type");
+    public string TunnelSshHostLabel => T("SSH 服务器", "SSH server");
+    public string TunnelSshPortLabel => T("SSH 端口", "SSH port");
+    public string TunnelBindHostLabel => T("本地监听地址", "Local listen address");
+    public string TunnelBindHostRemoteLabel => T("远程监听地址", "Remote listen address");
+    public string TunnelBindPortLabel => T("监听端口", "Listen port");
+    public string TunnelTargetHostLabel => T("目标地址", "Target host");
+    public string TunnelTargetPortLabel => T("目标端口", "Target port");
+    public string TunnelInvalid => T(
+        "请填写 SSH 服务器、用户名，以及 1–65535 范围内的端口。",
+        "Fill in the SSH server, username, and ports in the 1–65535 range.");
 
-    // 网络抓包
-    public string FeaturePacketCaptureDesc => T(
-        "捕获并查看网络数据包。",
-        "Capture and inspect network packets.");
-    public IReadOnlyList<string> FeaturePacketCaptureItems =>
-    [
-        T("网卡选择与捕获过滤器", "Adapter selection and capture filters"),
-        T("会话列表与十六进制视图", "Session list and hex view"),
-        T("导出 pcap 文件", "Export to pcap files"),
-    ];
+    public string TunnelTypeName(string key) => key switch
+    {
+        TunnelTypes.Remote => TunnelTypeRemote,
+        TunnelTypes.Dynamic => TunnelTypeDynamic,
+        _ => TunnelTypeLocal,
+    };
 
-    // 隧道转发
-    public string FeatureTunnelDesc => T(
-        "基于 SSH 的加密端口转发，把远程服务安全地映射到本地。",
-        "Encrypted port forwarding over SSH, securely mapping remote services to local ports.");
-    public IReadOnlyList<string> FeatureTunnelItems =>
-    [
-        T("本地（Local）转发", "Local forwarding"),
-        T("远程（Remote）转发", "Remote forwarding"),
-        T("动态 SOCKS 代理", "Dynamic SOCKS proxy"),
-        T("隧道列表与运行状态监控", "Tunnel list with live status"),
-    ];
+    public string TunnelStateName(TunnelState state) => state switch
+    {
+        TunnelState.Connecting => TunnelStateConnecting,
+        TunnelState.Running => TunnelStateRunning,
+        TunnelState.Failed => TunnelStateFailed,
+        _ => TunnelStateStopped,
+    };
+
+    // 网络抓包页面
+    public string PktSubtitle => T(
+        "选择网卡并设置过滤表达式，实时查看经过本机的数据包，可导出为 pcap 文件。",
+        "Pick an adapter and a filter expression to watch packets in real time, then export them as a pcap file.");
+    public string PktAdapter => T("网卡", "Adapter");
+    public string PktAdapterPlaceholder => T("选择网卡", "Select an adapter");
+    public string PktRefresh => T("刷新网卡列表", "Refresh adapters");
+    public string PktFilter => T("过滤器", "Filter");
+    public string PktFilterPlaceholder => T("BPF 表达式，例如 tcp port 443", "BPF expression, e.g. tcp port 443");
+    public string PktStart => T("开始", "Start");
+    public string PktStop => T("停止", "Stop");
+    public string PktClear => T("清空", "Clear");
+    public string PktExport => T("导出 pcap", "Export pcap");
+    public string PktStarting => T("正在开始捕获…", "Starting capture…");
+    public string PktCapturing(string adapter) => T($"正在捕获：{adapter}", $"Capturing on {adapter}");
+    public string PktStopped => T("已停止捕获。", "Capture stopped.");
+    public string PktStatus(long count, long dropped) => T(
+        $"已捕获 {count} 个数据包 · 丢弃 {dropped}",
+        $"{count} packets captured · {dropped} dropped");
+    public string PktEmpty => T("尚未捕获数据包。", "No packets captured yet.");
+    public string PktNoAdapters => T("未找到可用的网卡。", "No adapters found.");
+    public string PktNoSelection => T(
+        "在列表中选择一个数据包查看十六进制内容。",
+        "Select a packet to view its hex dump.");
+    public string PktDriverMissingTitle => T("未检测到 Npcap", "Npcap not detected");
+    public string PktDriverMissing => T(
+        "抓包需要先安装 Npcap（安装时勾选“WinPcap API 兼容模式”），安装后请重启 MoxTerm。",
+        "Packet capture requires Npcap. Install it (enable \"WinPcap API compatible mode\") and restart MoxTerm.");
+    public string PktDownloadNpcap => T("下载 Npcap", "Download Npcap");
+    public string PktStartFailedTitle => T("无法开始捕获", "Capture failed");
+    public string PktAdminRequired => T(
+        "需要管理员权限才能抓包，请以管理员身份运行 MoxTerm 后重试。",
+        "Administrator rights are required for packet capture. Run MoxTerm as administrator and try again.");
+    public string PktExportFailedTitle => T("导出失败", "Export failed");
+    public string PktExportDone(string name) => T($"已导出到 {name}。", $"Exported to {name}.");
+    public string PktHexTruncated(int bytes) => T(
+        $"数据包过长，仅显示前 {bytes} 字节。",
+        $"Packet is too long; showing the first {bytes} bytes.");
+    public string PktColTime => T("时间", "Time");
+    public string PktColSource => T("源", "Source");
+    public string PktColDestination => T("目的", "Destination");
+    public string PktColProtocol => T("协议", "Protocol");
+    public string PktColLength => T("长度", "Length");
+    public string PktColInfo => T("摘要", "Info");
+
+    // 端口扫描页面
+    public string PortScanSubtitle => T(
+        "扫描目标主机开放的 TCP 端口，单个连接超时 800 毫秒，结果只列出开放端口。",
+        "Scan a host for open TCP ports. Each connection times out after 800 ms; only open ports are listed.");
+    public string PortScanHostLabel => T("目标主机", "Target host");
+    public string PortScanHostPlaceholder => T("主机名或 IP", "Hostname or IP");
+    public string PortScanPortsLabel => T("端口范围", "Ports");
+    public string PortScanPortsPlaceholder => T("例如 1-1024 或 22,80,443", "e.g. 1-1024 or 22,80,443");
+    public string PortScanPresetCommon => T("常用端口", "Common ports");
+    public string PortScanPresetLow => T("1 – 1024", "1 – 1024");
+    public string PortScanPresetAll => T("1 – 65535", "1 – 65535");
+    public string PortScanStart => T("开始扫描", "Start scan");
+    public string PortScanStop => T("停止", "Stop");
+    public string PortScanClear => T("清空", "Clear");
+    public string PortScanHostRequired => T("请填写要扫描的主机名或 IP。", "Enter a hostname or IP to scan.");
+    public string PortScanPortsInvalid(string token) => T(
+        $"端口表达式“{token}”无效，请使用 1-1024 或 22,80,443 这样的格式。",
+        $"Invalid port expression \"{token}\". Use a format like 1-1024 or 22,80,443.");
+    public string PortScanPortsEmpty => T("请填写端口或端口范围。", "Enter ports or a port range.");
+    public string PortScanResolving(string host) => T($"正在解析 {host}…", $"Resolving {host}…");
+    public string PortScanProgress(int scanned, int total, int open) => T(
+        $"正在扫描 {scanned}/{total} · 开放 {open}",
+        $"Scanning {scanned}/{total} · {open} open");
+    public string PortScanDone(int open, int total, double seconds) => T(
+        $"扫描完成：{total} 个端口中开放 {open} 个，用时 {seconds:F1} 秒。",
+        $"Scan complete: {open} open of {total} ports in {seconds:F1} s.");
+    public string PortScanNoOpen => T("扫描完成，没有发现开放的端口。", "Scan finished; no open ports found.");
+    public string PortScanCancelled(int open) => T(
+        $"扫描已停止，已发现 {open} 个开放端口。",
+        $"Scan stopped; {open} open ports found.");
+    public string PortScanErrorTitle => T("无法扫描", "Cannot scan");
+    public string PortScanFailed(string message) => T($"扫描失败：{message}", $"Scan failed: {message}");
+    public string PortScanEmpty => T(
+        "尚未扫描。填写目标主机后点击“开始扫描”。",
+        "No scan yet. Enter a host and click \"Start scan\".");
+    public string PortScanColPort => T("端口", "Port");
+    public string PortScanColService => T("服务", "Service");
+    public string PortScanColBanner => T("标识", "Banner");
 
     // X Server
     public string FeatureXServerDesc => T(

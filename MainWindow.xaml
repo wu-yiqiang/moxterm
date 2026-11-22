@@ -81,12 +81,14 @@
                         </NavigationViewItem>
                         <NavigationViewItem Content="{x:Bind Loc.NavPortScan, Mode=OneWay}" Tag="portscan">
                             <NavigationViewItem.Icon>
-                                <SymbolIcon Symbol="Accept" />
+                                <!-- Radar：扫描探测 -->
+                                <FontIcon Glyph="&#xEB44;" />
                             </NavigationViewItem.Icon>
                         </NavigationViewItem>
                         <NavigationViewItem Content="{x:Bind Loc.NavPacketCapture, Mode=OneWay}" Tag="pktcap">
                             <NavigationViewItem.Icon>
-                                <SymbolIcon Symbol="Folder" />
+                                <!-- CaptureRecord：取景框 + 录制点，表示抓取数据包 -->
+                                <FontIcon Glyph="&#xEE51;" />
                             </NavigationViewItem.Icon>
                         </NavigationViewItem>
                     </NavigationViewItem.MenuItems>

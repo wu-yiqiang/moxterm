@@ -38,6 +38,8 @@
     <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.0" />
     <!-- 串口（Serial）会话 -->
     <PackageReference Include="System.IO.Ports" Version="10.0.0" />
+    <!-- 网络抓包：SharpPcap 依赖系统已安装的 Npcap 驱动 -->
+    <PackageReference Include="SharpPcap" Version="6.3.1" />
   </ItemGroup>
 
   <!-- 复制到输出目录，供运行时 AppWindow.SetIcon 设置窗口/任务栏图标、标题栏 Image 使用 -->

@@ -18,13 +18,10 @@ public static class FeatureCatalog
         return key switch
         {
             "netsvc" => new(Symbol.List, () => loc.FeatureNetServicesDesc, () => loc.FeatureNetServicesItems),
-            "tunnel" => new(Symbol.Sync, () => loc.FeatureTunnelDesc, () => loc.FeatureTunnelItems),
             "keygen" => new(Symbol.Accept, () => loc.FeatureKeyGenDesc, () => loc.FeatureKeyGenItems),
             "netports" => new(Symbol.Target, () => loc.FeatureOpenPortsDesc, () => loc.FeatureOpenPortsItems),
             "wol" => new(Symbol.Clock, () => loc.FeatureWakeOnLanDesc, () => loc.FeatureWakeOnLanItems),
             "netscan" => new(Symbol.Refresh, () => loc.FeatureNetScanDesc, () => loc.FeatureNetScanItems),
-            "portscan" => new(Symbol.Accept, () => loc.FeaturePortScanDesc, () => loc.FeaturePortScanItems),
-            "pktcap" => new(Symbol.Folder, () => loc.FeaturePacketCaptureDesc, () => loc.FeaturePacketCaptureItems),
             "xserver" => new(Symbol.Target, () => loc.FeatureXServerDesc, () => loc.FeatureXServerItems),
             _ => null,
         };

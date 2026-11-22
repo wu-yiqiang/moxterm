@@ -29,13 +29,10 @@ public sealed partial class FeaturePage : Page
         _title = key switch
         {
             "netsvc" => Loc.NavNetServices,
-            "tunnel" => Loc.NavTunneling,
             "keygen" => Loc.NavKeyGen,
             "netports" => Loc.NavOpenPorts,
             "wol" => Loc.NavWakeOnLan,
             "netscan" => Loc.NavNetScan,
-            "portscan" => Loc.NavPortScan,
-            "pktcap" => Loc.NavPacketCapture,
             _ => Loc.NavXServer,
         };
 

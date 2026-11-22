@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="MoxTerm.Views.PacketCapturePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    NavigationCacheMode="Required">
+
+    <Grid Padding="24,20,24,16" RowSpacing="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- 标题与说明 -->
+        <StackPanel Grid.Row="0" Spacing="4">
+            <TextBlock Style="{StaticResource TitleTextBlockStyle}" Text="{x:Bind Loc.NavPacketCapture, Mode=OneWay}" />
+            <TextBlock
+                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                Style="{StaticResource CaptionTextBlockStyle}"
+                Text="{x:Bind Loc.PktSubtitle, Mode=OneWay}"
+                TextWrapping="Wrap" />
+        </StackPanel>
+
+        <!-- 驱动缺失与启动失败提示 -->
+        <StackPanel Grid.Row="1" Spacing="8">
+            <InfoBar
+                x:Name="DriverBar"
+                IsClosable="False"
+                IsOpen="False"
+                Severity="Warning">
+                <InfoBar.ActionButton>
+                    <HyperlinkButton
+                        x:Name="DownloadNpcapButton"
+                        Click="OnDownloadNpcapClick" />
+                </InfoBar.ActionButton>
+            </InfoBar>
+            <InfoBar
+                x:Name="ErrorBar"
+                IsClosable="True"
+                IsOpen="False"
+                Severity="Error" />
+        </StackPanel>
+
+        <!-- 工具栏：网卡、过滤器与捕获操作 -->
+        <Grid Grid.Row="2" ColumnSpacing="8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <ComboBox
+                x:Name="AdapterBox"
+                Width="300"
+                DisplayMemberPath="Description"
+                IsEnabled="False"
+                PlaceholderText="{x:Bind Loc.PktAdapterPlaceholder, Mode=OneWay}"
+                ToolTipService.ToolTip="{x:Bind Loc.PktAdapter, Mode=OneWay}" />
+
+            <Button
+                Grid.Column="1"
+                x:Name="RefreshButton"
+                Click="OnRefreshClick"
+                IsEnabled="False"
+                ToolTipService.ToolTip="{x:Bind Loc.PktRefresh, Mode=OneWay}">
+                <FontIcon FontSize="14" Glyph="&#xE72C;" />
+            </Button>
+
+            <TextBox
+                x:Name="FilterBox"
+                Grid.Column="2"
+                IsEnabled="False"
+                PlaceholderText="{x:Bind Loc.PktFilterPlaceholder, Mode=OneWay}"
+                ToolTipService.ToolTip="{x:Bind Loc.PktFilter, Mode=OneWay}" />
+
+            <StackPanel
+                Grid.Column="3"
+                Orientation="Horizontal"
+                Spacing="8">
+                <Button
+                    x:Name="StartButton"
+                    Click="OnStartClick"
+                    Content="{x:Bind Loc.PktStart, Mode=OneWay}"
+                    IsEnabled="False"
+                    Style="{StaticResource AccentButtonStyle}" />
+                <Button
+                    x:Name="StopButton"
+                    Click="OnStopClick"
+                    Content="{x:Bind Loc.PktStop, Mode=OneWay}"
+                    IsEnabled="False" />
+                <Button
+                    x:Name="ClearButton"
+                    Click="OnClearClick"
+                    Content="{x:Bind Loc.PktClear, Mode=OneWay}"
+                    IsEnabled="False" />
+                <Button
+                    x:Name="ExportButton"
+                    Click="OnExportClick"
+                    Content="{x:Bind Loc.PktExport, Mode=OneWay}"
+                    IsEnabled="False" />
+            </StackPanel>
+        </Grid>
+
+        <!-- 数据包列表 + 详情 -->
+        <Grid Grid.Row="3" RowSpacing="12">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="240" />
+            </Grid.RowDefinitions>
+
+            <Grid Grid.Row="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!-- 列标题，宽度与行模板保持一致 -->
+                <Grid
+                    Grid.Row="0"
+                    Margin="20,0,20,4"
+                    ColumnSpacing="12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="96" />
+                        <ColumnDefinition Width="190" />
+                        <ColumnDefinition Width="190" />
+                        <ColumnDefinition Width="72" />
+                        <ColumnDefinition Width="60" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        Style="{StaticResource CaptionTextBlockStyle}"
+                        Text="{x:Bind Loc.PktColTime, Mode=OneWay}" />
+                    <TextBlock
+                        Grid.Column="1"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        Style="{StaticResource CaptionTextBlockStyle}"
+                        Text="{x:Bind Loc.PktColSource, Mode=OneWay}" />
+                    <TextBlock
+                        Grid.Column="2"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        Style="{StaticResource CaptionTextBlockStyle}"
+                        Text="{x:Bind Loc.PktColDestination, Mode=OneWay}" />
+                    <TextBlock
+                        Grid.Column="3"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        Style="{StaticResource CaptionTextBlockStyle}"
+                        Text="{x:Bind Loc.PktColProtocol, Mode=OneWay}" />
+                    <TextBlock
+                        Grid.Column="4"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        Style="{StaticResource CaptionTextBlockStyle}"
+                        Text="{x:Bind Loc.PktColLength, Mode=OneWay}" />
+                    <TextBlock
+                        Grid.Column="5"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        Style="{StaticResource CaptionTextBlockStyle}"
+                        Text="{x:Bind Loc.PktColInfo, Mode=OneWay}" />
+                </Grid>
+
+                <ListView
+                    x:Name="PacketsList"
+                    Grid.Row="1"
+                    SelectionChanged="OnPacketSelectionChanged"
+                    SelectionMode="Single">
+                    <ListView.ItemContainerStyle>
+                        <!-- 基于 WinUI 3 默认项样式，选中高亮沿用其默认圆角 -->
+                        <Style BasedOn="{StaticResource DefaultListViewItemStyle}" TargetType="ListViewItem">
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                            <Setter Property="Padding" Value="12,0" />
+                        </Style>
+                    </ListView.ItemContainerStyle>
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <Grid
+                                MinHeight="30"
+                                Padding="8,3"
+                                ColumnSpacing="12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="96" />
+                                    <ColumnDefinition Width="190" />
+                                    <ColumnDefinition Width="190" />
+                                    <ColumnDefinition Width="72" />
+                                    <ColumnDefinition Width="60" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock
+                                    Style="{StaticResource CaptionTextBlockStyle}"
+                                    Text="{Binding TimeText}" />
+                                <TextBlock
+                                    Grid.Column="1"
+                                    Style="{StaticResource CaptionTextBlockStyle}"
+                                    Text="{Binding Source}"
+                                    TextTrimming="CharacterEllipsis" />
+                                <TextBlock
+                                    Grid.Column="2"
+                                    Style="{StaticResource CaptionTextBlockStyle}"
+                                    Text="{Binding Destination}"
+                                    TextTrimming="CharacterEllipsis" />
+                                <TextBlock
+                                    Grid.Column="3"
+                                    Style="{StaticResource CaptionTextBlockStyle}"
+                                    Text="{Binding Protocol}" />
+                                <TextBlock
+                                    Grid.Column="4"
+                                    Style="{StaticResource CaptionTextBlockStyle}"
+                                    Text="{Binding LengthText}" />
+                                <TextBlock
+                                    Grid.Column="5"
+                                    Style="{StaticResource CaptionTextBlockStyle}"
+                                    Text="{Binding Info}"
+                                    TextTrimming="CharacterEllipsis" />
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+
+                <TextBlock
+                    x:Name="EmptyText"
+                    Grid.Row="1"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                    IsHitTestVisible="False"
+                    Text="{x:Bind Loc.PktEmpty, Mode=OneWay}" />
+            </Grid>
+
+            <!-- 选中数据包的摘要与十六进制视图 -->
+            <Border
+                Grid.Row="1"
+                Padding="14,12"
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="8">
+                <Grid RowSpacing="8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <TextBlock
+                        x:Name="DetailHeader"
+                        Style="{StaticResource BodyStrongTextBlockStyle}"
+                        TextWrapping="Wrap" />
+                    <ScrollViewer
+                        Grid.Row="1"
+                        HorizontalScrollBarVisibility="Auto"
+                        HorizontalScrollMode="Auto"
+                        VerticalScrollBarVisibility="Auto">
+                        <TextBlock
+                            x:Name="HexText"
+                            FontFamily="Consolas"
+                            FontSize="12"
+                            IsTextSelectionEnabled="True"
+                            TextWrapping="NoWrap" />
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- 状态栏 -->
+        <TextBlock
+            x:Name="StatusText"
+            Grid.Row="4"
+            Style="{StaticResource CaptionTextBlockStyle}"
+            TextWrapping="Wrap" />
+    </Grid>
+</Page>
