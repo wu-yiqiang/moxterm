@@ -65,6 +65,9 @@ public sealed class AppSettings
     /// <summary>SSH 隧道（端口转发）配置列表。</summary>
     public List<TunnelProfile> Tunnels { get; set; } = new();
 
+    /// <summary>保存的 Wake On Lan 设备列表。</summary>
+    public List<WolDevice> WolDevices { get; set; } = new();
+
     /// <summary>
     /// 旧版本的 SSH 会话列表字段。读取时并入 <see cref="SavedSessions"/>，
     /// 迁完置空（序列化时跳过），只为兼容早期配置文件而保留。

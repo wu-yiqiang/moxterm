@@ -230,10 +230,7 @@ public sealed partial class SettingsPage : Page
         }
 
         var picker = new Windows.Storage.Pickers.FolderPicker();
-
-        // 非打包应用需要手动把选择器关联到窗口句柄，否则会立即返回 null
-        var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App.Shell);
-        WinRT.Interop.InitializeWithWindow.Initialize(picker, hwnd);
+        PickerHelper.TryAttach(picker);
 
         picker.SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.ComputerFolder;
         // FolderPicker 仍要求至少一个文件类型过滤器，这是 API 的历史遗留

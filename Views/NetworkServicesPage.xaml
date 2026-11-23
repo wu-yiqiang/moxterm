@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="MoxTerm.Views.NetworkServicesPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    NavigationCacheMode="Required">
+
+    <Grid Padding="24,20,24,16" RowSpacing="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- 标题与说明 -->
+        <StackPanel Grid.Row="0" Spacing="4">
+            <TextBlock Style="{StaticResource TitleTextBlockStyle}" Text="{x:Bind Loc.NavNetServices, Mode=OneWay}" />
+            <TextBlock
+                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                Style="{StaticResource CaptionTextBlockStyle}"
+                Text="{x:Bind Loc.NetSvcSubtitle, Mode=OneWay}"
+                TextWrapping="Wrap" />
+        </StackPanel>
+
+        <!-- 启动失败提示 -->
+        <InfoBar
+            x:Name="ErrorBar"
+            Grid.Row="1"
+            IsClosable="True"
+            IsOpen="False"
+            Severity="Error" />
+
+        <!-- 共享目录 -->
+        <Grid Grid.Row="2" ColumnSpacing="8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <TextBox
+                x:Name="RootBox"
+                Header="{x:Bind Loc.NetSvcFolderLabel, Mode=OneWay}"
+                PlaceholderText="{x:Bind Loc.NetSvcFolderPlaceholder, Mode=OneWay}" />
+
+            <Button
+                x:Name="BrowseButton"
+                Grid.Column="1"
+                VerticalAlignment="Bottom"
+                Click="OnBrowseClick"
+                Content="{x:Bind Loc.NetSvcBrowse, Mode=OneWay}" />
+        </Grid>
+
+        <!-- 三个本地文件服务 -->
+        <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto">
+            <StackPanel Spacing="12">
+
+                <!-- HTTP -->
+                <Border
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="18,12">
+                    <Grid ColumnSpacing="20">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="220" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Spacing="2" VerticalAlignment="Center">
+                            <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="{x:Bind Loc.NetSvcHttpName, Mode=OneWay}" />
+                            <TextBlock
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                Style="{StaticResource CaptionTextBlockStyle}"
+                                Text="{x:Bind Loc.NetSvcHttpDesc, Mode=OneWay}"
+                                TextWrapping="Wrap" />
+                        </StackPanel>
+
+                        <StackPanel
+                            Grid.Column="1"
+                            Orientation="Horizontal"
+                            Spacing="8"
+                            VerticalAlignment="Center">
+                            <TextBlock
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                Style="{StaticResource CaptionTextBlockStyle}"
+                                Text="{x:Bind Loc.NetSvcPortLabel, Mode=OneWay}"
+                                VerticalAlignment="Center" />
+                            <NumberBox
+                                x:Name="HttpPortBox"
+                                Width="100"
+                                Maximum="65535"
+                                Minimum="1"
+                                SmallChange="1"
+                                SpinButtonPlacementMode="Compact"
+                                Value="8000" />
+                        </StackPanel>
+
+                        <StackPanel
+                            Grid.Column="2"
+                            Orientation="Horizontal"
+                            Spacing="8"
+                            VerticalAlignment="Center">
+                            <Ellipse x:Name="HttpDot" Width="8" Height="8" />
+                            <TextBlock
+                                x:Name="HttpStatus"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                Style="{StaticResource CaptionTextBlockStyle}"
+                                Text="{x:Bind Loc.NetSvcStopped, Mode=OneWay}"
+                                TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+
+                        <Button
+                            x:Name="HttpButton"
+                            Grid.Column="3"
+                            MinWidth="80"
+                            VerticalAlignment="Center"
+                            Click="OnHttpToggle"
+                            Content="{x:Bind Loc.NetSvcStart, Mode=OneWay}" />
+                    </Grid>
+                </Border>
+
+                <!-- FTP -->
+                <Border
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="18,12">
+                    <Grid ColumnSpacing="20">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="220" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Spacing="2" VerticalAlignment="Center">
+                            <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="{x:Bind Loc.NetSvcFtpName, Mode=OneWay}" />
+                            <TextBlock
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                Style="{StaticResource CaptionTextBlockStyle}"
+                                Text="{x:Bind Loc.NetSvcFtpDesc, Mode=OneWay}"
+                                TextWrapping="Wrap" />
+                        </StackPanel>
+
+                        <StackPanel
+                            Grid.Column="1"
+                            Orientation="Horizontal"
+                            Spacing="8"
+                            VerticalAlignment="Center">
+                            <TextBlock
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                Style="{StaticResource CaptionTextBlockStyle}"
+                                Text="{x:Bind Loc.NetSvcPortLabel, Mode=OneWay}"
+                                VerticalAlignment="Center" />
+                            <NumberBox
+                                x:Name="FtpPortBox"
+                                Width="100"
+                                Maximum="65535"
+                                Minimum="1"
+                                SmallChange="1"
+                                SpinButtonPlacementMode="Compact"
+                                Value="2121" />
+                        </StackPanel>
+
+                        <StackPanel
+                            Grid.Column="2"
+                            Orientation="Horizontal"
+                            Spacing="8"
+                            VerticalAlignment="Center">
+                            <Ellipse x:Name="FtpDot" Width="8" Height="8" />
+                            <TextBlock
+                                x:Name="FtpStatus"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                Style="{StaticResource CaptionTextBlockStyle}"
+                                Text="{x:Bind Loc.NetSvcStopped, Mode=OneWay}"
+                                TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+
+                        <Button
+                            x:Name="FtpButton"
+                            Grid.Column="3"
+                            MinWidth="80"
+                            VerticalAlignment="Center"
+                            Click="OnFtpToggle"
+                            Content="{x:Bind Loc.NetSvcStart, Mode=OneWay}" />
+                    </Grid>
+                </Border>
+
+                <!-- TFTP -->
+                <Border
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="18,12">
+                    <Grid ColumnSpacing="20">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="220" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Spacing="2" VerticalAlignment="Center">
+                            <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="{x:Bind Loc.NetSvcTftpName, Mode=OneWay}" />
+                            <TextBlock
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                Style="{StaticResource CaptionTextBlockStyle}"
+                                Text="{x:Bind Loc.NetSvcTftpDesc, Mode=OneWay}"
+                                TextWrapping="Wrap" />
+                        </StackPanel>
+
+                        <StackPanel
+                            Grid.Column="1"
+                            Orientation="Horizontal"
+                            Spacing="8"
+                            VerticalAlignment="Center">
+                            <TextBlock
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                Style="{StaticResource CaptionTextBlockStyle}"
+                                Text="{x:Bind Loc.NetSvcPortLabel, Mode=OneWay}"
+                                VerticalAlignment="Center" />
+                            <NumberBox
+                                x:Name="TftpPortBox"
+                                Width="100"
+                                Maximum="65535"
+                                Minimum="1"
+                                SmallChange="1"
+                                SpinButtonPlacementMode="Compact"
+                                Value="69" />
+                        </StackPanel>
+
+                        <StackPanel
+                            Grid.Column="2"
+                            Orientation="Horizontal"
+                            Spacing="8"
+                            VerticalAlignment="Center">
+                            <Ellipse x:Name="TftpDot" Width="8" Height="8" />
+                            <TextBlock
+                                x:Name="TftpStatus"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                Style="{StaticResource CaptionTextBlockStyle}"
+                                Text="{x:Bind Loc.NetSvcStopped, Mode=OneWay}"
+                                TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+
+                        <Button
+                            x:Name="TftpButton"
+                            Grid.Column="3"
+                            MinWidth="80"
+                            VerticalAlignment="Center"
+                            Click="OnTftpToggle"
+                            Content="{x:Bind Loc.NetSvcStart, Mode=OneWay}" />
+                    </Grid>
+                </Border>
+
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Page>

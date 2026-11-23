@@ -28,6 +28,18 @@
 
             <!-- 等宽字体：优先 Cascadia Mono，逐级回退 -->
             <FontFamily x:Key="TerminalFontFamily">Cascadia Mono, Consolas, Courier New</FontFamily>
+
+            <!--
+                列表行统一样式：内容横向拉伸 + 固定左右内边距。
+                基于 WinUI 3 默认项样式，选中高亮保留默认圆角。
+            -->
+            <Style
+                x:Key="SelectableRowItemStyle"
+                BasedOn="{StaticResource DefaultListViewItemStyle}"
+                TargetType="ListViewItem">
+                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                <Setter Property="Padding" Value="12,0" />
+            </Style>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

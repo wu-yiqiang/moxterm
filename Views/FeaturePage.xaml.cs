@@ -12,13 +12,23 @@ public sealed partial class FeaturePage : Page
     private FeatureInfo? _info;
     private string _title = string.Empty;
 
+    /// <summary>语言切换回调；页面不缓存，离开时必须退订，避免 Loc 持有已废弃页面。</summary>
+    private readonly EventHandler _onLocaleChanged;
+
     /// <summary>界面文案源；x:Bind 绑定到它的属性，语言切换时自动刷新。</summary>
     private Loc Loc => Loc.Instance;
 
     public FeaturePage()
     {
         InitializeComponent();
-        Loc.Changed += (_, _) => Render();
+        _onLocaleChanged = (_, _) => Render();
+        Loc.Changed += _onLocaleChanged;
+    }
+
+    protected override void OnNavigatedFrom(NavigationEventArgs e)
+    {
+        base.OnNavigatedFrom(e);
+        Loc.Changed -= _onLocaleChanged;
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -28,11 +38,7 @@ public sealed partial class FeaturePage : Page
 
         _title = key switch
         {
-            "netsvc" => Loc.NavNetServices,
             "keygen" => Loc.NavKeyGen,
-            "netports" => Loc.NavOpenPorts,
-            "wol" => Loc.NavWakeOnLan,
-            "netscan" => Loc.NavNetScan,
             _ => Loc.NavXServer,
         };
 

@@ -304,9 +304,7 @@ public sealed partial class PacketCapturePage : Page
         };
         picker.FileTypeChoices.Add("pcap", new List<string> { ".pcap" });
 
-        // 非打包应用需要手动把选择器关联到窗口句柄，否则会立即返回 null
-        var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App.Shell);
-        WinRT.Interop.InitializeWithWindow.Initialize(picker, hwnd);
+        PickerHelper.TryAttach(picker);
 
         var file = await picker.PickSaveFileAsync();
         if (file is null)

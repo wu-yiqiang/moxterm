@@ -62,11 +62,12 @@
     自包含发布时裁掉包内附带的、本项目从未使用的组件：
     - Windows App SDK 1.8 自动引入的 AI / ML（onnxruntime、DirectML）与 Widgets 运行时
     - 调试符号（.pdb）
+    - 仅用于调试/转储诊断的运行时组件（DAC、SymReader），正常使用不会加载
     实测这些模块运行时不会被加载，删除后不影响功能，只减小安装体积。
   -->
   <Target Name="TrimUnusedPublishPayload" AfterTargets="ComputeFilesToPublish">
     <ItemGroup>
-      <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('%(Filename)', '^(onnxruntime.*|DirectML|Microsoft\.Windows\.AI.*|Microsoft\.Windows\.Widgets.*|Microsoft\.ML\.OnnxRuntime.*)$'))" />
+      <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('%(Filename)', '^(onnxruntime.*|DirectML|Microsoft\.Windows\.AI.*|Microsoft\.Windows\.Widgets.*|Microsoft\.ML\.OnnxRuntime.*|mscordaccore.*|mscordbi.*|Microsoft\.DiaSymReader\.Native.*)$'))" />
       <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('%(RelativePath)', '^NpuDetect[/\\]'))" />
       <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition="'%(Extension)' == '.pdb'" />
     </ItemGroup>

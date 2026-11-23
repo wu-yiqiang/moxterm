@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="MoxTerm.Views.OpenPortsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    NavigationCacheMode="Required">
+
+    <Grid Padding="24,20,24,16" RowSpacing="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- 标题与说明 -->
+        <StackPanel Grid.Row="0" Spacing="4">
+            <TextBlock Style="{StaticResource TitleTextBlockStyle}" Text="{x:Bind Loc.NavOpenPorts, Mode=OneWay}" />
+            <TextBlock
+                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                Style="{StaticResource CaptionTextBlockStyle}"
+                Text="{x:Bind Loc.OpenPortsSubtitle, Mode=OneWay}"
+                TextWrapping="Wrap" />
+        </StackPanel>
+
+        <!-- 读取失败提示 -->
+        <InfoBar
+            x:Name="ErrorBar"
+            Grid.Row="1"
+            IsClosable="True"
+            IsOpen="False"
+            Severity="Error" />
+
+        <!-- 工具栏：过滤与刷新 -->
+        <Grid Grid.Row="2" ColumnSpacing="8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <TextBox
+                x:Name="FilterBox"
+                PlaceholderText="{x:Bind Loc.OpenPortsFilterPlaceholder, Mode=OneWay}"
+                TextChanged="OnFilterChanged" />
+
+            <Button
+                Grid.Column="1"
+                Click="OnRefreshClick"
+                Content="{x:Bind Loc.OpenPortsRefresh, Mode=OneWay}" />
+        </Grid>
+
+        <!-- 端口列表 -->
+        <Grid Grid.Row="3">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <Grid
+                Grid.Row="0"
+                Margin="20,0,20,4"
+                ColumnSpacing="12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="70" />
+                    <ColumnDefinition Width="210" />
+                    <ColumnDefinition Width="210" />
+                    <ColumnDefinition Width="130" />
+                    <ColumnDefinition Width="80" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <TextBlock
+                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                    Style="{StaticResource CaptionTextBlockStyle}"
+                    Text="{x:Bind Loc.OpenPortsColProtocol, Mode=OneWay}" />
+                <TextBlock
+                    Grid.Column="1"
+                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                    Style="{StaticResource CaptionTextBlockStyle}"
+                    Text="{x:Bind Loc.OpenPortsColLocal, Mode=OneWay}" />
+                <TextBlock
+                    Grid.Column="2"
+                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                    Style="{StaticResource CaptionTextBlockStyle}"
+                    Text="{x:Bind Loc.OpenPortsColRemote, Mode=OneWay}" />
+                <TextBlock
+                    Grid.Column="3"
+                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                    Style="{StaticResource CaptionTextBlockStyle}"
+                    Text="{x:Bind Loc.OpenPortsColState, Mode=OneWay}" />
+                <TextBlock
+                    Grid.Column="4"
+                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                    Style="{StaticResource CaptionTextBlockStyle}"
+                    Text="{x:Bind Loc.OpenPortsColPid, Mode=OneWay}" />
+                <TextBlock
+                    Grid.Column="5"
+                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                    Style="{StaticResource CaptionTextBlockStyle}"
+                    Text="{x:Bind Loc.OpenPortsColProcess, Mode=OneWay}" />
+            </Grid>
+
+            <ListView
+                x:Name="PortsList"
+                Grid.Row="1"
+                SelectionMode="Single">
+                <ListView.ItemContainerStyle>
+                    <StaticResource ResourceKey="SelectableRowItemStyle" />
+                </ListView.ItemContainerStyle>
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <Grid
+                            MinHeight="32"
+                            Padding="8,3"
+                            ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="70" />
+                                <ColumnDefinition Width="210" />
+                                <ColumnDefinition Width="210" />
+                                <ColumnDefinition Width="130" />
+                                <ColumnDefinition Width="80" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock
+                                Style="{StaticResource BodyStrongTextBlockStyle}"
+                                Text="{Binding Protocol}" />
+                            <TextBlock
+                                Grid.Column="1"
+                                FontFamily="Consolas"
+                                Text="{Binding LocalText}"
+                                TextTrimming="CharacterEllipsis" />
+                            <TextBlock
+                                Grid.Column="2"
+                                FontFamily="Consolas"
+                                Text="{Binding RemoteText}"
+                                TextTrimming="CharacterEllipsis" />
+                            <TextBlock
+                                Grid.Column="3"
+                                Text="{Binding StateText}"
+                                TextTrimming="CharacterEllipsis" />
+                            <TextBlock
+                                Grid.Column="4"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                Text="{Binding Pid}" />
+                            <TextBlock
+                                Grid.Column="5"
+                                Text="{Binding ProcessText}"
+                                TextTrimming="CharacterEllipsis" />
+                        </Grid>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+
+            <TextBlock
+                x:Name="EmptyText"
+                Grid.Row="1"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                IsHitTestVisible="False"
+                Text="{x:Bind Loc.OpenPortsEmpty, Mode=OneWay}"
+                TextWrapping="Wrap" />
+        </Grid>
+
+        <!-- 状态栏 -->
+        <TextBlock
+            x:Name="StatusText"
+            Grid.Row="4"
+            Style="{StaticResource CaptionTextBlockStyle}"
+            TextWrapping="Wrap" />
+    </Grid>
+</Page>

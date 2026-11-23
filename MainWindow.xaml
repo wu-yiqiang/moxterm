@@ -51,12 +51,14 @@
                     <NavigationViewItem.MenuItems>
                         <NavigationViewItem Content="{x:Bind Loc.NavNetServices, Mode=OneWay}" Tag="netsvc">
                             <NavigationViewItem.Icon>
-                                <SymbolIcon Symbol="List" />
+                                <!-- Network：网络拓扑节点 -->
+                                <FontIcon Glyph="&#xE968;" />
                             </NavigationViewItem.Icon>
                         </NavigationViewItem>
                         <NavigationViewItem Content="{x:Bind Loc.NavTunneling, Mode=OneWay}" Tag="tunnel">
                             <NavigationViewItem.Icon>
-                                <SymbolIcon Symbol="Sync" />
+                                <!-- VPN：加密隧道 -->
+                                <FontIcon Glyph="&#xE705;" />
                             </NavigationViewItem.Icon>
                         </NavigationViewItem>
                         <NavigationViewItem Content="{x:Bind Loc.NavKeyGen, Mode=OneWay}" Tag="keygen">
@@ -66,17 +68,20 @@
                         </NavigationViewItem>
                         <NavigationViewItem Content="{x:Bind Loc.NavOpenPorts, Mode=OneWay}" Tag="netports">
                             <NavigationViewItem.Icon>
-                                <SymbolIcon Symbol="Target" />
+                                <!-- NetworkAdapter：网卡适配器 -->
+                                <FontIcon Glyph="&#xEDA3;" />
                             </NavigationViewItem.Icon>
                         </NavigationViewItem>
                         <NavigationViewItem Content="{x:Bind Loc.NavWakeOnLan, Mode=OneWay}" Tag="wol">
                             <NavigationViewItem.Icon>
-                                <SymbolIcon Symbol="Clock" />
+                                <!-- LightningBolt：闪电唤醒 -->
+                                <FontIcon Glyph="&#xE945;" />
                             </NavigationViewItem.Icon>
                         </NavigationViewItem>
                         <NavigationViewItem Content="{x:Bind Loc.NavNetScan, Mode=OneWay}" Tag="netscan">
                             <NavigationViewItem.Icon>
-                                <SymbolIcon Symbol="Refresh" />
+                                <!-- GatewayRouter：网关路由器 -->
+                                <FontIcon Glyph="&#xEB77;" />
                             </NavigationViewItem.Icon>
                         </NavigationViewItem>
                         <NavigationViewItem Content="{x:Bind Loc.NavPortScan, Mode=OneWay}" Tag="portscan">
@@ -87,8 +92,8 @@
                         </NavigationViewItem>
                         <NavigationViewItem Content="{x:Bind Loc.NavPacketCapture, Mode=OneWay}" Tag="pktcap">
                             <NavigationViewItem.Icon>
-                                <!-- CaptureRecord：取景框 + 录制点，表示抓取数据包 -->
-                                <FontIcon Glyph="&#xEE51;" />
+                                <!-- EyeTracking：眼睛 + 取景框，表示捕获数据包 -->
+                                <FontIcon Glyph="&#xEAD6;" />
                             </NavigationViewItem.Icon>
                         </NavigationViewItem>
                     </NavigationViewItem.MenuItems>

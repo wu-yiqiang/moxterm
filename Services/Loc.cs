@@ -228,16 +228,6 @@ public sealed class Loc : INotifyPropertyChanged
     public string ComingSoon => T("即将推出", "Coming soon");
     public string PlannedFeatures => T("规划中的能力", "Planned capabilities");
 
-    // 网络服务
-    public string FeatureNetServicesDesc => T(
-        "在本地一键启动常用网络服务，便于调试与文件分发。",
-        "Start common network services locally with one click, for debugging and file distribution.");
-    public IReadOnlyList<string> FeatureNetServicesItems =>
-    [
-        T("TFTP / FTP / HTTP 文件服务", "TFTP / FTP / HTTP file services"),
-        T("服务端口与运行状态管理", "Service ports and status management"),
-    ];
-
     // SSH 密钥生成器
     public string FeatureKeyGenDesc => T(
         "生成与管理 SSH 密钥对。",
@@ -247,39 +237,6 @@ public sealed class Loc : INotifyPropertyChanged
         T("RSA / Ed25519 密钥生成", "RSA / Ed25519 key generation"),
         T("公钥导出（OpenSSH 格式）", "Public key export (OpenSSH format)"),
         T("私钥口令保护", "Private key passphrase protection"),
-    ];
-
-    // 列出开放端口
-    public string FeatureOpenPortsDesc => T(
-        "查看本机哪些进程正在监听或占用端口。",
-        "See which processes are listening on or using ports.");
-    public IReadOnlyList<string> FeatureOpenPortsItems =>
-    [
-        T("TCP / UDP 监听与连接列表", "TCP / UDP listeners and connections"),
-        T("进程名与 PID 关联", "Process name and PID mapping"),
-        T("按端口或进程过滤", "Filter by port or process"),
-    ];
-
-    // Wake On Lan
-    public string FeatureWakeOnLanDesc => T(
-        "通过魔术包唤醒局域网内的设备。",
-        "Wake devices on the LAN with magic packets.");
-    public IReadOnlyList<string> FeatureWakeOnLanItems =>
-    [
-        T("按 MAC 地址发送唤醒包", "Send wake-up packets by MAC address"),
-        T("常用设备保存", "Save frequently used devices"),
-        T("广播地址与端口自定义", "Custom broadcast address and port"),
-    ];
-
-    // 网络扫描
-    public string FeatureNetScanDesc => T(
-        "扫描网段内的在线主机。",
-        "Discover live hosts on a network segment.");
-    public IReadOnlyList<string> FeatureNetScanItems =>
-    [
-        T("IP 段主机发现", "Live host discovery over an IP range"),
-        T("主机名与 MAC 地址解析", "Hostname and MAC address resolution"),
-        T("结果导出", "Result export"),
     ];
 
     // SSH 隧道（端口转发）页面
@@ -417,6 +374,126 @@ public sealed class Loc : INotifyPropertyChanged
     public string PortScanColPort => T("端口", "Port");
     public string PortScanColService => T("服务", "Service");
     public string PortScanColBanner => T("标识", "Banner");
+
+    // 网络扫描页面
+    public string NetScanSubtitle => T(
+        "通过 ICMP 与 ARP 发现网段内的在线主机，解析主机名与 MAC，并检测常见服务是否开放。",
+        "Discover live hosts with ICMP and ARP, resolve host names and MAC addresses, and detect common services.");
+    public string NetScanRangeLabel => T("扫描范围", "Range");
+    public string NetScanRangePlaceholder => T("例如 192.168.1.0/24", "e.g. 192.168.1.0/24");
+    public string NetScanLocalSubnet => T("本机网段", "Local subnet");
+    public string NetScanNoLocalSubnet => T("未找到可用的本机网段。", "No local subnet found.");
+    public string NetScanStart => T("开始扫描", "Start scan");
+    public string NetScanStop => T("停止", "Stop");
+    public string NetScanClear => T("清空", "Clear");
+    public string NetScanExport => T("导出 CSV", "Export CSV");
+    public string NetScanRangeInvalid => T(
+        "扫描范围无效，请填写 CIDR（192.168.1.0/24）或地址区间（192.168.1.1-254）。",
+        "Invalid range. Use a CIDR (192.168.1.0/24) or an address range (192.168.1.1-254).");
+    public string NetScanRangeTooLarge => T(
+        "扫描范围过大，单次最多支持 65536 个地址。",
+        "The range is too large; up to 65536 addresses per scan.");
+    public string NetScanProgress(int scanned, int total, int alive) => T(
+        $"正在扫描 {scanned}/{total} · 在线 {alive}",
+        $"Scanning {scanned}/{total} · {alive} online");
+    public string NetScanDone(int alive, int total, double seconds) => T(
+        $"扫描完成：{total} 个地址中在线 {alive} 个，用时 {seconds:F1} 秒。",
+        $"Scan complete: {alive} online of {total} addresses in {seconds:F1} s.");
+    public string NetScanNoHosts => T("扫描完成，没有发现在线主机。", "Scan finished; no live hosts found.");
+    public string NetScanCancelled(int alive) => T(
+        $"扫描已停止，已发现在线主机 {alive} 个。",
+        $"Scan stopped; {alive} live hosts found.");
+    public string NetScanErrorTitle => T("无法扫描", "Cannot scan");
+    public string NetScanFailed(string message) => T($"扫描失败：{message}", $"Scan failed: {message}");
+    public string NetScanEmpty => T(
+        "尚未扫描。填写网段后点击“开始扫描”。",
+        "No scan yet. Enter a range and click \"Start scan\".");
+    public string NetScanColAddress => T("IP 地址", "IP address");
+    public string NetScanColHostName => T("主机名", "Host name");
+    public string NetScanColMac => T("MAC 地址", "MAC address");
+    public string NetScanColLatency => T("延迟", "Latency");
+    public string NetScanExportTitle => T("无法导出", "Cannot export");
+    public string NetScanExportDone(string name) => T($"已导出到 {name}。", $"Exported to {name}.");
+
+    // 开放端口页面
+    public string OpenPortsSubtitle => T(
+        "列出本机正在监听的端口与活动连接，并关联所属进程与 PID。",
+        "List listening ports and active connections on this machine, with their processes and PIDs.");
+    public string OpenPortsFilterPlaceholder => T(
+        "按端口、地址、进程名或 PID 过滤",
+        "Filter by port, address, process, or PID");
+    public string OpenPortsRefresh => T("刷新", "Refresh");
+    public string OpenPortsEmpty => T("没有读取到端口信息。", "No port information available.");
+    public string OpenPortsNoMatch => T("没有匹配的条目。", "No matching entries.");
+    public string OpenPortsStatus(int total, int tcp, int udp) => T(
+        $"共 {total} 个条目 · TCP {tcp} · UDP {udp}",
+        $"{total} entries · TCP {tcp} · UDP {udp}");
+    public string OpenPortsErrorTitle => T("无法读取端口列表", "Cannot read the port list");
+    public string OpenPortsFailed(string message) => T(
+        $"读取端口列表失败：{message}",
+        $"Failed to read the port list: {message}");
+    public string OpenPortsColProtocol => T("协议", "Protocol");
+    public string OpenPortsColLocal => T("本地地址", "Local address");
+    public string OpenPortsColRemote => T("远端地址", "Remote address");
+    public string OpenPortsColState => T("状态", "State");
+    public string OpenPortsColPid => T("PID", "PID");
+    public string OpenPortsColProcess => T("进程", "Process");
+
+    // 网络服务页面
+    public string NetSvcSubtitle => T(
+        "在本地启动只读的 HTTP / FTP / TFTP 文件服务，便于在局域网内浏览与分发文件。",
+        "Start read-only HTTP / FTP / TFTP file services locally to browse and share files on the LAN.");
+    public string NetSvcFolderLabel => T("共享目录", "Shared folder");
+    public string NetSvcFolderPlaceholder => T("选择要共享的文件夹", "Choose a folder to share");
+    public string NetSvcBrowse => T("浏览", "Browse");
+    public string NetSvcHttpName => T("HTTP 文件服务", "HTTP file service");
+    public string NetSvcHttpDesc => T("浏览器打开即可浏览目录、下载文件", "Browse directories and download files in a browser");
+    public string NetSvcFtpName => T("FTP 文件服务", "FTP file service");
+    public string NetSvcFtpDesc => T("FTP 客户端匿名只读访问", "Anonymous read-only access from FTP clients");
+    public string NetSvcTftpName => T("TFTP 文件服务", "TFTP file service");
+    public string NetSvcTftpDesc => T("TFTP 客户端读取文件（UDP）", "Read files from TFTP clients (UDP)");
+    public string NetSvcPortLabel => T("端口", "Port");
+    public string NetSvcStart => T("启动", "Start");
+    public string NetSvcStop => T("停止", "Stop");
+    public string NetSvcStopped => T("已停止", "Stopped");
+    public string NetSvcRunning(string url) => T($"运行中 · {url}", $"Running · {url}");
+    public string NetSvcErrorTitle => T("无法启动服务", "Cannot start the service");
+    public string NetSvcFolderInvalid => T("请选择一个存在的共享目录。", "Choose a shared folder that exists.");
+    public string NetSvcPortInvalid => T("端口必须是 1–65535 之间的整数。", "The port must be an integer between 1 and 65535.");
+    public string NetSvcStartFailed(string protocol, string message) => T(
+        $"启动 {protocol} 服务失败：{message}",
+        $"Failed to start the {protocol} service: {message}");
+
+    // Wake On Lan 页面
+    public string WolSubtitle => T(
+        "向目标设备的 MAC 地址发送魔术包，把它从关机或休眠状态唤醒。",
+        "Send a magic packet to a device's MAC address to wake it from sleep or power off.");
+    public string WolWake => T("唤醒", "Wake");
+    public string WolNew => T("新建设备", "New device");
+    public string WolEdit => T("编辑", "Edit");
+    public string WolDelete => T("删除", "Delete");
+    public string WolEmpty => T(
+        "还没有设备。点击“新建设备”添加要唤醒的计算机。",
+        "No devices yet. Click \"New device\" to add a computer to wake.");
+    public string WolDialogNew => T("新建设备", "New device");
+    public string WolDialogEdit => T("编辑设备", "Edit device");
+    public string WolNameLabel => T("名称", "Name");
+    public string WolNamePlaceholder => T("可选，默认使用 MAC 地址", "Optional, defaults to the MAC address");
+    public string WolMacLabel => T("MAC 地址", "MAC address");
+    public string WolMacPlaceholder => T("例如 AA:BB:CC:DD:EE:FF", "e.g. AA:BB:CC:DD:EE:FF");
+    public string WolBroadcastLabel => T("广播地址", "Broadcast address");
+    public string WolPortLabel => T("端口", "Port");
+    public string WolInvalid => T(
+        "请填写有效的 MAC 地址、IPv4 广播地址，以及 1–65535 范围内的端口。",
+        "Enter a valid MAC address, IPv4 broadcast address, and a port in the 1–65535 range.");
+    public string WolDeleteConfirm(string name) => T(
+        $"确定删除设备“{name}”吗？",
+        $"Delete device \"{name}\"?");
+    public string WolSending(string name) => T($"正在唤醒 {name}…", $"Waking {name}…");
+    public string WolSent(string name) => T($"已向 {name} 发送唤醒包。", $"Wake-up packet sent to {name}.");
+    public string WolSendFailed(string message) => T(
+        $"发送唤醒包失败：{message}",
+        $"Failed to send the wake-up packet: {message}");
 
     // X Server
     public string FeatureXServerDesc => T(

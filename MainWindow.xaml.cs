@@ -192,6 +192,10 @@ public sealed partial class MainWindow : Window
             "tunnel" => typeof(TunnelingPage),
             "pktcap" => typeof(PacketCapturePage),
             "portscan" => typeof(PortScanPage),
+            "netscan" => typeof(NetworkScanPage),
+            "wol" => typeof(WakeOnLanPage),
+            "netports" => typeof(OpenPortsPage),
+            "netsvc" => typeof(NetworkServicesPage),
             "settings" => typeof(SettingsPage),
             _ => null,
         };

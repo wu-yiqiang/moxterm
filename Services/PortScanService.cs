@@ -211,6 +211,7 @@ public static class PortScanService
         443 => "HTTPS",
         445 => "SMB",
         465 => "SMTPS",
+        513 => "Rlogin",
         514 => "Syslog",
         587 => "SMTP",
         631 => "IPP",

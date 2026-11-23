@@ -257,7 +257,7 @@ public sealed partial class TunnelingPage : Page
             PlaceholderText = Loc.SshHostPlaceholder,
             Text = draft.SshHost,
         };
-        var sshPortBox = PortBox(Loc.TunnelSshPortLabel, draft.SshPort is >= 1 and <= 65535 ? draft.SshPort : 22);
+        var sshPortBox = PortInput.Create(Loc.TunnelSshPortLabel, draft.SshPort is >= 1 and <= 65535 ? draft.SshPort : 22);
         var userBox = new TextBox
         {
             Header = Loc.SshUsernameLabel,
@@ -275,13 +275,13 @@ public sealed partial class TunnelingPage : Page
             Header = Loc.TunnelBindHostLabel,
             Text = string.IsNullOrWhiteSpace(draft.BindHost) ? "127.0.0.1" : draft.BindHost,
         };
-        var bindPortBox = PortBox(Loc.TunnelBindPortLabel, draft.BindPort is >= 1 and <= 65535 ? draft.BindPort : double.NaN);
+        var bindPortBox = PortInput.Create(Loc.TunnelBindPortLabel, draft.BindPort is >= 1 and <= 65535 ? draft.BindPort : double.NaN);
         var targetHostBox = new TextBox
         {
             Header = Loc.TunnelTargetHostLabel,
             Text = string.IsNullOrWhiteSpace(draft.TargetHost) ? "127.0.0.1" : draft.TargetHost,
         };
-        var targetPortBox = PortBox(Loc.TunnelTargetPortLabel, draft.TargetPort is >= 1 and <= 65535 ? draft.TargetPort : double.NaN);
+        var targetPortBox = PortInput.Create(Loc.TunnelTargetPortLabel, draft.TargetPort is >= 1 and <= 65535 ? draft.TargetPort : double.NaN);
 
         var hint = new TextBlock
         {
@@ -332,9 +332,9 @@ public sealed partial class TunnelingPage : Page
         dialog.PrimaryButtonClick += (_, args) =>
         {
             var type = TunnelTypes.All[Math.Clamp(typeBox.SelectedIndex, 0, TunnelTypes.All.Count - 1)];
-            var sshPort = ReadPort(sshPortBox);
-            var bindPort = ReadPort(bindPortBox);
-            var targetPort = ReadPort(targetPortBox);
+            var sshPort = PortInput.Read(sshPortBox);
+            var bindPort = PortInput.Read(bindPortBox);
+            var targetPort = PortInput.Read(targetPortBox);
             var invalid = string.IsNullOrWhiteSpace(sshHostBox.Text)
                 || string.IsNullOrWhiteSpace(userBox.Text)
                 || sshPort is < 1 or > 65535
@@ -385,63 +385,6 @@ public sealed partial class TunnelingPage : Page
         }
 
         UpdateButtons();
-    }
-
-    /// <summary>端口输入框：整数、1–65535，带步进箭头。</summary>
-    private static NumberBox PortBox(string header, double value) => new()
-    {
-        Header = header,
-        Minimum = 1,
-        Maximum = 65535,
-        SmallChange = 1,
-        LargeChange = 10,
-        AcceptsExpression = false,
-        Value = value,
-        HorizontalAlignment = HorizontalAlignment.Stretch,
-        SpinButtonPlacementMode = NumberBoxSpinButtonPlacementMode.Compact,
-        NumberFormatter = new DecimalFormatter
-        {
-            FractionDigits = 0,
-            IntegerDigits = 1,
-        },
-    };
-
-    /// <summary>
-    /// 读取端口：NumberBox 的 Value 与 Text 都要等到输入提交（失焦 / 回车）才更新，
-    /// 光标还停在输入框里就点“新建”时会读到旧值，所以以模板里输入框的当前文本为准。
-    /// </summary>
-    private static int ReadPort(NumberBox box)
-    {
-        if (FindInputTextBox(box) is { } input)
-        {
-            return int.TryParse(input.Text?.Trim(), out var current) ? current : 0;
-        }
-
-        return int.TryParse(box.Text?.Trim(), out var parsed)
-            ? parsed
-            : double.IsNaN(box.Value) ? 0 : (int)box.Value;
-    }
-
-    private static TextBox? FindInputTextBox(DependencyObject parent)
-    {
-        var count = VisualTreeHelper.GetChildrenCount(parent);
-
-        for (var index = 0; index < count; index++)
-        {
-            var child = VisualTreeHelper.GetChild(parent, index);
-
-            if (child is TextBox { Name: "InputBox" } input)
-            {
-                return input;
-            }
-
-            if (FindInputTextBox(child) is { } found)
-            {
-                return found;
-            }
-        }
-
-        return null;
     }
 
     /// <summary>地址与端口并排：地址占满剩余宽度，端口固定宽度。</summary>
