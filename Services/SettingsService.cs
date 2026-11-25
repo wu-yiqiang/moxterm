@@ -54,6 +54,9 @@ public sealed class AppSettings
     /// <summary>粘贴含换行的内容前是否弹窗确认。</summary>
     public bool ConfirmMultilinePaste { get; set; } = true;
 
+    /// <summary>在终端中选中文本后自动复制到剪贴板。</summary>
+    public bool CopyOnSelect { get; set; }
+
     /// <summary>最小化时是否隐藏到通知区域（托盘）并在后台继续运行。</summary>
     public bool HideOnMinimize { get; set; }
 

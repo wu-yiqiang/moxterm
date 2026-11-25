@@ -189,6 +189,7 @@ public sealed partial class MainWindow : Window
         var target = tag switch
         {
             "terminal" => typeof(TerminalPage),
+            "shortcuts" => typeof(ShortcutsPage),
             "tunnel" => typeof(TunnelingPage),
             "pktcap" => typeof(PacketCapturePage),
             "portscan" => typeof(PortScanPage),

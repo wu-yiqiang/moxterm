@@ -16,12 +16,36 @@
             HorizontalScrollBarVisibility="Auto"
             VerticalScrollBarVisibility="Auto"
             Padding="10,8">
-            <TextBlock
-                x:Name="Screen"
-                FontFamily="{StaticResource TerminalFontFamily}"
-                Foreground="{ThemeResource TerminalForegroundBrush}"
-                IsTextSelectionEnabled="True"
-                TextWrapping="NoWrap" />
+            <Grid>
+                <TextBlock
+                    x:Name="Screen"
+                    FontFamily="{StaticResource TerminalFontFamily}"
+                    Foreground="{ThemeResource TerminalForegroundBrush}"
+                    IsTextSelectionEnabled="True"
+                    TextWrapping="NoWrap" />
+
+                <!-- 链接下划线：按字符网格绝对定位，随内容一起滚动，且不参与命中测试 -->
+                <Canvas x:Name="LinkUnderlines" IsHitTestVisible="False" />
+            </Grid>
         </ScrollViewer>
+
+        <!-- 悬停在链接上时跟随指针的“打开链接”提示，本身可点击 -->
+        <Border
+            x:Name="LinkHint"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+            BorderThickness="1"
+            CornerRadius="4"
+            Padding="8,4"
+            PointerEntered="OnLinkHintPointerEntered"
+            Tapped="OnLinkHintTapped"
+            Visibility="Collapsed">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+                <FontIcon FontSize="12" Glyph="&#xE8A7;" />
+                <TextBlock x:Name="LinkHintText" FontSize="12" />
+            </StackPanel>
+        </Border>
     </Grid>
 </UserControl>

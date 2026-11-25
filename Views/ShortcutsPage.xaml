@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="MoxTerm.Views.ShortcutsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    NavigationCacheMode="Required">
+
+    <Page.Resources>
+        <!-- 右侧按键文本：次要颜色 + 等宽字体，和左侧说明区分开 -->
+        <Style x:Key="ShortcutKeysStyle" TargetType="TextBlock">
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+            <Setter Property="FontFamily" Value="Consolas" />
+        </Style>
+    </Page.Resources>
+
+    <ScrollViewer>
+        <StackPanel Padding="36,28,36,36" Spacing="16">
+
+            <TextBlock
+                Style="{StaticResource TitleTextBlockStyle}"
+                Text="{x:Bind Loc.KeyboardShortcuts, Mode=OneWay}" />
+
+            <Border
+                Padding="20"
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="8">
+                <StackPanel Spacing="4">
+
+                    <Grid MinHeight="40" ColumnSpacing="24">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            Text="{x:Bind Loc.ShortcutCopy, Mode=OneWay}" />
+                        <TextBlock
+                            Grid.Column="1"
+                            Style="{StaticResource ShortcutKeysStyle}"
+                            Text="Ctrl+Shift+C" />
+                    </Grid>
+
+                    <Grid MinHeight="40" ColumnSpacing="24">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            Text="{x:Bind Loc.ShortcutInterrupt, Mode=OneWay}" />
+                        <TextBlock
+                            Grid.Column="1"
+                            Style="{StaticResource ShortcutKeysStyle}"
+                            Text="Ctrl+C" />
+                    </Grid>
+
+                    <Grid MinHeight="40" ColumnSpacing="24">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            Text="{x:Bind Loc.ShortcutPaste, Mode=OneWay}" />
+                        <TextBlock
+                            Grid.Column="1"
+                            Style="{StaticResource ShortcutKeysStyle}"
+                            Text="Ctrl+V" />
+                    </Grid>
+
+                    <Grid MinHeight="40" ColumnSpacing="24">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            Text="{x:Bind Loc.ShortcutClear, Mode=OneWay}" />
+                        <TextBlock
+                            Grid.Column="1"
+                            Style="{StaticResource ShortcutKeysStyle}"
+                            Text="Ctrl+L" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

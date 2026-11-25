@@ -30,7 +30,7 @@
             IsBackButtonVisible="Collapsed"
             IsSettingsVisible="False"
             IsTitleBarAutoPaddingEnabled="False"
-            PaneDisplayMode="Left"
+            PaneDisplayMode="Auto"
             OpenPaneLength="212"
             SelectionChanged="OnNavSelectionChanged">
 
@@ -112,6 +112,13 @@
                             </NavigationViewItem.Icon>
                         </NavigationViewItem>
                     </NavigationViewItem.MenuItems>
+                </NavigationViewItem>
+
+                <NavigationViewItem Content="{x:Bind Loc.NavShortcuts, Mode=OneWay}" Tag="shortcuts">
+                    <NavigationViewItem.Icon>
+                        <!-- Keyboard：键盘 -->
+                        <FontIcon Glyph="&#xE765;" />
+                    </NavigationViewItem.Icon>
                 </NavigationViewItem>
             </NavigationView.MenuItems>
 

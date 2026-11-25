@@ -20,9 +20,10 @@ public sealed partial class TerminalPage : Page
     /// <summary>串口波特率下拉框的可选项，允许手动输入其它取值。</summary>
     private static readonly int[] BaudRates = [9600, 19200, 38400, 57600, 115200, 230400, 460800, 921600];
 
-    // 菜单图标（Segoe Fluent）：终端、密钥（已保存会话）、新建、编辑、删除
+    // 菜单图标（Segoe Fluent）：终端、密钥（已保存会话）、分组、新建、编辑、删除
     private const string GlyphTerminal = "\uE756";
     private const string GlyphSession = "\uE8D7";
+    private const string GlyphGroup = "\uE8B7";
     private const string GlyphNewConnection = "\uE710";
     private const string GlyphEdit = "\uE70F";
     private const string GlyphDelete = "\uE74D";
@@ -53,7 +54,7 @@ public sealed partial class TerminalPage : Page
     /// </summary>
     private void OnTabsLoaded(object sender, RoutedEventArgs e)
     {
-        if (FindVisualChild<ContentPresenter>(Tabs, "TabContentPresenter") is not { } presenter)
+        if (DialogHelper.FindVisualChild<ContentPresenter>(Tabs, "TabContentPresenter") is not { } presenter)
         {
             return;
         }
@@ -68,26 +69,6 @@ public sealed partial class TerminalPage : Page
                 grid.RowDefinitions[row].Height = new GridLength(1, GridUnitType.Star);
             }
         }
-    }
-
-    private static T? FindVisualChild<T>(DependencyObject parent, string name) where T : FrameworkElement
-    {
-        for (var i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
-        {
-            var child = VisualTreeHelper.GetChild(parent, i);
-
-            if (child is T match && match.Name == name)
-            {
-                return match;
-            }
-
-            if (FindVisualChild<T>(child, name) is { } result)
-            {
-                return result;
-            }
-        }
-
-        return null;
     }
 
     /// <summary>默认 Shell：设置页配置的优先，否则取系统发现的第一个。</summary>
@@ -149,15 +130,19 @@ public sealed partial class TerminalPage : Page
 
     private void CreateSession(ShellProfile profile)
     {
+        // 标签内容是一个窗格宿主：默认只有一块终端，右键可分屏成多块
+        var host = new TerminalPaneHost();
+        host.Add(new TerminalView
+        {
+            Profile = profile,
+            Backend = TerminalBackend.FromName(App.Settings.Current.Backend),
+        });
+
         var tab = new TabViewItem
         {
             Header = profile.Name,
             IconSource = new FontIconSource { Glyph = "\uE756" },
-            Content = new TerminalView
-            {
-                Profile = profile,
-                Backend = TerminalBackend.FromName(App.Settings.Current.Backend),
-            },
+            Content = host,
             IsClosable = true,
         };
 
@@ -216,35 +201,34 @@ public sealed partial class TerminalPage : Page
         // 所以先收起加号菜单，再在光标处独立弹出一个小菜单。
         var savedSessions = App.Settings.Current.SavedSessions;
 
-        foreach (var saved in savedSessions)
+        // 单个会话行：图标 + 名称 + 行内“编辑 / 删除”
+        MenuFlyoutItem SessionItem(SavedSession saved)
         {
-            var captured = saved;
-            var item = MenuItem(saved.Name, GlyphSession, () => ConnectSaved(captured));
+            var item = MenuItem(saved.Name, GlyphSession, () => ConnectSaved(saved));
             item.Template = (ControlTemplate)XamlReader.Load(SavedSessionItemTemplate);
 
             // 行内“编辑 / 删除”按钮：模板在弹层首次打开（Loaded）后才进可视树，挂一次即可。
-            // 嵌套 lambda 的参数不要用单下划线命名：内层的 `_ = Task` 弃元赋值会绑定到外层同名参数
             item.Loaded += (itemSender, itemArgs) =>
             {
                 var row = (MenuFlyoutItem)itemSender;
 
-                if (FindVisualChild<Button>(row, "EditButton") is { } editButton && editButton.Tag is not "hooked")
+                if (DialogHelper.FindVisualChild<Button>(row, "EditButton") is { } editButton && editButton.Tag is not "hooked")
                 {
                     editButton.Tag = "hooked";
-                    editButton.Click += (buttonSender, buttonArgs) =>
+                    editButton.Click += (_, _) =>
                     {
                         flyout.Hide();
-                        _ = ShowConnectDialogAsync(captured);
+                        _ = ShowConnectDialogAsync(saved);
                     };
                 }
 
-                if (FindVisualChild<Button>(row, "DeleteButton") is { } deleteButton && deleteButton.Tag is not "hooked")
+                if (DialogHelper.FindVisualChild<Button>(row, "DeleteButton") is { } deleteButton && deleteButton.Tag is not "hooked")
                 {
                     deleteButton.Tag = "hooked";
-                    deleteButton.Click += (buttonSender, buttonArgs) =>
+                    deleteButton.Click += (_, _) =>
                     {
                         flyout.Hide();
-                        _ = DeleteSavedAsync(captured);
+                        _ = DeleteSavedAsync(saved);
                     };
                 }
             };
@@ -253,9 +237,34 @@ public sealed partial class TerminalPage : Page
             {
                 e.Handled = true;
                 e.TryGetPosition(this, out var position);
-                _ = ShowSessionMenuAsync(captured, position);
+                _ = ShowSessionMenuAsync(saved, position);
             };
-            flyout.Items.Add(item);
+
+            return item;
+        }
+
+        // 未分组的会话直接平铺；有分组的收进各自的子菜单，形成树形分组
+        foreach (var saved in savedSessions.Where(session => string.IsNullOrWhiteSpace(session.Group)))
+        {
+            flyout.Items.Add(SessionItem(saved));
+        }
+
+        foreach (var group in savedSessions
+                     .Where(session => !string.IsNullOrWhiteSpace(session.Group))
+                     .GroupBy(session => session.Group.Trim()))
+        {
+            var subItem = new MenuFlyoutSubItem
+            {
+                Text = group.Key,
+                Icon = new FontIcon { Glyph = GlyphGroup },
+            };
+
+            foreach (var saved in group)
+            {
+                subItem.Items.Add(SessionItem(saved));
+            }
+
+            flyout.Items.Add(subItem);
         }
 
         if (savedSessions.Count > 0)
@@ -266,7 +275,7 @@ public sealed partial class TerminalPage : Page
         flyout.Items.Add(MenuItem(Loc.NewConnection, GlyphNewConnection, () => _ = ShowConnectDialogAsync()));
 
         // 锚定到加号按钮（模板部件名 AddButton），找不到就退到整个 TabView
-        FrameworkElement anchor = FindVisualChild<Button>(Tabs, "AddButton") is { } button ? button : sender;
+        FrameworkElement anchor = DialogHelper.FindVisualChild<Button>(Tabs, "AddButton") is { } button ? button : sender;
         flyout.ShowAt(anchor);
     }
 
@@ -487,13 +496,57 @@ public sealed partial class TerminalPage : Page
             TextWrapping = TextWrapping.Wrap,
             Height = 96,
         };
+        var groupBox = new TextBox
+        {
+            Header = Loc.Instance.SessionGroupLabel,
+            PlaceholderText = Loc.Instance.SessionGroupPlaceholder,
+        };
         var saveCheck = new CheckBox
         {
             Content = Loc.Instance.SshSaveSession,
             IsChecked = true,
         };
 
-        // 名称与协议固定在最上方；连接字段按协议显隐，备注与“保存此会话”只在有连接信息的协议下出现
+        // RDP 重定向选项：剪贴板与本地驱动器。RDP 只能按驱动器共享，不能只共享单个文件夹
+        var rdpClipboardCheck = new CheckBox
+        {
+            Content = Loc.Instance.RdpClipboard,
+            IsChecked = true,
+        };
+        var rdpAllDrivesCheck = new CheckBox { Content = Loc.Instance.RdpAllDrives };
+        var rdpDriveList = new ListView
+        {
+            SelectionMode = ListViewSelectionMode.Multiple,
+            MaxHeight = 132,
+        };
+        foreach (var letter in EnumerateFixedDriveLetters())
+        {
+            rdpDriveList.Items.Add(new ListViewItem { Content = $"{letter}:", Tag = letter });
+        }
+
+        var rdpPanel = new StackPanel { Spacing = 8 };
+        rdpPanel.Children.Add(new TextBlock
+        {
+            Text = Loc.Instance.RdpExternalHint,
+            TextWrapping = TextWrapping.Wrap,
+            Opacity = 0.75,
+            FontSize = 12,
+        });
+        rdpPanel.Children.Add(rdpClipboardCheck);
+        rdpPanel.Children.Add(rdpAllDrivesCheck);
+        rdpPanel.Children.Add(new TextBlock { Text = Loc.Instance.RdpDrivesLabel });
+        rdpPanel.Children.Add(rdpDriveList);
+        rdpPanel.Children.Add(new TextBlock
+        {
+            Text = Loc.Instance.RdpDriveHint,
+            TextWrapping = TextWrapping.Wrap,
+            Opacity = 0.75,
+            FontSize = 12,
+        });
+        rdpAllDrivesCheck.Checked += (_, _) => rdpDriveList.IsEnabled = false;
+        rdpAllDrivesCheck.Unchecked += (_, _) => rdpDriveList.IsEnabled = true;
+
+        // 名称、分组与协议固定在最上方；连接字段按协议显隐，备注与“保存此会话”只在有连接信息的协议下出现
         var fields = new StackPanel { Spacing = 12 };
         fields.Children.Add(hostBox);
         fields.Children.Add(portBox);
@@ -501,6 +554,7 @@ public sealed partial class TerminalPage : Page
         fields.Children.Add(passwordWrap);
         fields.Children.Add(serialPortBox);
         fields.Children.Add(baudBox);
+        fields.Children.Add(rdpPanel);
 
         var details = new StackPanel { Spacing = 12 };
         details.Children.Add(notesBox);
@@ -514,6 +568,7 @@ public sealed partial class TerminalPage : Page
 
         var content = new StackPanel { Spacing = 12 };
         content.Children.Add(nameBox);
+        content.Children.Add(groupBox);
         content.Children.Add(protocolBox);
         content.Children.Add(fields);
         content.Children.Add(details);
@@ -522,11 +577,21 @@ public sealed partial class TerminalPage : Page
         // 对话框宽度是按内容撑开的（下限 320），内容不定宽就会缩到最窄，表单很挤
         content.Width = 420;
 
+        // RDP 的重定向选项让表单变高，小窗口下会顶出对话框；
+        // 放进跟随窗口高度的 ScrollViewer，超出部分滚动查看
+        var contentScroller = new ScrollViewer
+        {
+            Content = content,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
+            MaxHeight = Math.Clamp(XamlRoot.Size.Height - 340, 220, 520),
+        };
+
         var dialog = new ContentDialog
         {
             XamlRoot = XamlRoot,
             Title = editing is null ? Loc.Instance.NewConnection : Loc.Instance.EditConnection,
-            Content = content,
+            Content = contentScroller,
             PrimaryButtonText = editing is null ? Loc.Instance.Connect : Loc.Instance.SaveChanges,
             CloseButtonText = Loc.Instance.Cancel,
             DefaultButton = ContentDialogButton.Primary,
@@ -548,8 +613,12 @@ public sealed partial class TerminalPage : Page
             passwordBox.Visibility = Show(SessionField.Password);
             serialPortBox.Visibility = Show(SessionField.SerialPort);
             baudBox.Visibility = Show(SessionField.BaudRate);
+            rdpPanel.Visibility = protocol.Key == SessionProtocol.Rdp ? Visibility.Visible : Visibility.Collapsed;
 
-            details.Visibility = protocol.Fields.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+            // 分组只对“会保存的会话”有意义，与备注同进同退
+            var showDetails = protocol.Fields.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+            details.Visibility = showDetails;
+            groupBox.Visibility = showDetails;
 
             hint.Visibility = protocol.Supported ? Visibility.Collapsed : Visibility.Visible;
             dialog.IsPrimaryButtonEnabled = protocol.Supported;
@@ -587,10 +656,27 @@ public sealed partial class TerminalPage : Page
             userBox.Text = editing.Username;
             passwordBox.Password = SecretProtector.Unprotect(editing.Password);
             notesBox.Text = editing.Notes;
+            groupBox.Text = editing.Group ?? "";
             serialPortBox.Text = editing.SerialPortName ?? "";
             if (editing.BaudRate > 0)
             {
                 baudBox.Text = editing.BaudRate.ToString();
+            }
+
+            // 还原 RDP 重定向选项
+            rdpClipboardCheck.IsChecked = editing.RdpClipboard;
+            if (editing.RdpDrives == "*")
+            {
+                rdpAllDrivesCheck.IsChecked = true;
+            }
+            else
+            {
+                foreach (var item in rdpDriveList.Items.OfType<ListViewItem>())
+                {
+                    item.IsSelected = editing.RdpDrives
+                        .Split(';', StringSplitOptions.RemoveEmptyEntries)
+                        .Contains((string)item.Tag!);
+                }
             }
 
             // 编辑即保存，不再提供“保存此会话”勾选项
@@ -602,7 +688,7 @@ public sealed partial class TerminalPage : Page
             nameBox.Focus(FocusState.Programmatic);
 
             // 模板默认“主按钮在左、关闭按钮在右”，这里对调成“取消在左、连接在右”
-            SwapDialogButtons(dialog);
+            DialogHelper.SwapButtons(dialog);
         };
 
         if (await dialog.ShowAsync() != ContentDialogResult.Primary)
@@ -633,6 +719,15 @@ public sealed partial class TerminalPage : Page
         var baudRate = int.TryParse(baudBox.Text?.Trim(), out var parsedBaud) && parsedBaud > 0
             ? parsedBaud
             : DefaultBaudRate;
+
+        // RDP：只在选中 RDP 时收集重定向选项，其他协议留默认值
+        var isRdp = protocol.Key == SessionProtocol.Rdp;
+        var rdpClipboard = rdpClipboardCheck.IsChecked == true;
+        var rdpDrives = !isRdp
+            ? ""
+            : rdpAllDrivesCheck.IsChecked == true
+                ? "*"
+                : string.Join(";", rdpDriveList.SelectedItems.OfType<ListViewItem>().Select(item => (string)item.Tag!));
 
         var name = nameBox.Text.Trim();
         if (name.Length == 0)
@@ -669,7 +764,10 @@ public sealed partial class TerminalPage : Page
                 SecretProtector.Protect(password),
                 notesBox.Text.Trim(),
                 serialPortName,
-                baudRate));
+                baudRate,
+                rdpClipboard,
+                rdpDrives,
+                groupBox.Text.Trim()));
 
             App.Settings.Save();
         }
@@ -677,7 +775,7 @@ public sealed partial class TerminalPage : Page
         // 编辑模式只保存修改；新建模式保存后直接连接
         if (editing is null)
         {
-            Connect(protocol, name, host, port, user, password, serialPortName, baudRate);
+            Connect(protocol, name, host, port, user, password, serialPortName, baudRate, rdpClipboard, rdpDrives);
         }
     }
 
@@ -690,7 +788,9 @@ public sealed partial class TerminalPage : Page
         string user,
         string password,
         string serialPortName,
-        int baudRate)
+        int baudRate,
+        bool rdpClipboard = true,
+        string rdpDrives = "")
     {
         var target = user.Length == 0 ? host : $"{user}@{host}";
 
@@ -708,6 +808,14 @@ public sealed partial class TerminalPage : Page
                     Port: port,
                     Username: user,
                     Password: password));
+                break;
+
+            case SessionProtocol.Rdp:
+                // RDP 交给系统远程桌面客户端，剪贴板与本地驱动器按会话配置重定向
+                if (!RdpLauncher.TryLaunch(name, host, port, user, rdpClipboard, rdpDrives, out var rdpError))
+                {
+                    _ = ShowRdpLaunchErrorAsync(rdpError);
+                }
                 break;
 
             case SessionProtocol.Vnc:
@@ -793,7 +901,44 @@ public sealed partial class TerminalPage : Page
             session.Username,
             SecretProtector.Unprotect(session.Password),
             session.SerialPortName ?? "",
-            session.BaudRate);
+            session.BaudRate,
+            session.RdpClipboard,
+            session.RdpDrives);
+    }
+
+    /// <summary>启动远程桌面客户端失败时的提示。</summary>
+    private async Task ShowRdpLaunchErrorAsync(string message)
+    {
+        var dialog = new ContentDialog
+        {
+            XamlRoot = XamlRoot,
+            Title = Loc.NewConnection,
+            Content = new TextBlock
+            {
+                Text = Loc.RdpLaunchFailed + message,
+                TextWrapping = TextWrapping.Wrap,
+            },
+            CloseButtonText = Loc.Cancel,
+        };
+
+        await dialog.ShowAsync();
+    }
+
+    /// <summary>枚举可用于 RDP 驱动器共享的本地盘符（固定磁盘与可移动磁盘）。</summary>
+    private static IEnumerable<string> EnumerateFixedDriveLetters()
+    {
+        try
+        {
+            return DriveInfo.GetDrives()
+                .Where(drive => drive.DriveType is DriveType.Fixed or DriveType.Removable)
+                .OrderBy(drive => drive.Name)
+                .Select(drive => drive.Name[..1].ToUpperInvariant())
+                .Distinct();
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return [];
+        }
     }
 
     /// <summary>删除已保存的会话：弹确认框，确认后从设置里移除并持久化。</summary>
@@ -814,7 +959,7 @@ public sealed partial class TerminalPage : Page
         };
 
         // “删除”要带强调色（DefaultButton 决定哪个按钮高亮），并按惯例落在右侧
-        dialog.Opened += (_, _) => SwapDialogButtons(dialog);
+        dialog.Opened += (_, _) => DialogHelper.SwapButtons(dialog);
 
         if (await dialog.ShowAsync() != ContentDialogResult.Primary)
         {
@@ -824,12 +969,6 @@ public sealed partial class TerminalPage : Page
         App.Settings.Current.SavedSessions.Remove(session);
         App.Settings.Save();
     }
-
-    /// <summary>
-    /// WinUI 的 ContentDialog 固定按“主按钮在左、关闭按钮在右”排布按钮。
-    /// 这里把两者的位置对调，让“连接”落在右侧。
-    /// </summary>
-    private static void SwapDialogButtons(ContentDialog dialog) => DialogHelper.SwapButtons(dialog);
 
     /// <summary>
     /// 系统自带客户端的可执行文件：优先用 System32 下的绝对路径（非打包应用不保证 PATH 里有），
@@ -845,9 +984,9 @@ public sealed partial class TerminalPage : Page
     {
         if (args.Tab is TabViewItem tab)
         {
-            if (tab.Content is TerminalView view)
+            if (tab.Content is TerminalPaneHost host)
             {
-                view.Dispose();
+                host.Dispose();
             }
             else if (tab.Content is SftpView sftp)
             {
@@ -872,5 +1011,6 @@ public sealed partial class TerminalPage : Page
         Tabs.TabItems
             .OfType<TabViewItem>()
             .Select(tab => tab.Content)
-            .OfType<TerminalView>();
+            .OfType<TerminalPaneHost>()
+            .SelectMany(host => host.Views);
 }

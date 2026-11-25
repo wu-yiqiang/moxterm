@@ -15,6 +15,9 @@ namespace MoxTerm.Services;
 /// <param name="Notes">备注。</param>
 /// <param name="SerialPortName">串口名，如 <c>COM3</c>。</param>
 /// <param name="BaudRate">串口波特率。</param>
+/// <param name="RdpClipboard">RDP 是否共享剪贴板。</param>
+/// <param name="RdpDrives">RDP 共享的本地驱动器：<c>*</c> 表示全部，分号分隔盘符，空表示不共享。</param>
+/// <param name="Group">分组名，用于给会话归类；空表示未分组。</param>
 public sealed record SavedSession(
     string Name,
     string Protocol,
@@ -24,7 +27,10 @@ public sealed record SavedSession(
     string Password,
     string Notes,
     string SerialPortName = "",
-    int BaudRate = 0);
+    int BaudRate = 0,
+    bool RdpClipboard = true,
+    string RdpDrives = "",
+    string Group = "");
 
 /// <summary>
 /// 会话密码加解密：用 DPAPI（当前用户范围）保护，settings.json 里不落明文。

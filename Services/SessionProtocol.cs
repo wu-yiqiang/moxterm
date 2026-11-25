@@ -32,6 +32,7 @@ public sealed record SessionProtocol(
     public const string Sftp = "sftp";
     public const string Ftp = "ftp";
     public const string Vnc = "vnc";
+    public const string Rdp = "rdp";
     public const string Serial = "serial";
     public const string Shell = "shell";
     public const string Wsl = "wsl";
@@ -41,7 +42,7 @@ public sealed record SessionProtocol(
 
     /// <summary>
     /// 协议清单，顺序与 MobaXterm 的会话类型一致。
-    /// 已实现：SSH / Telnet / SFTP / FTP（文件面板）/ VNC（远程桌面）与串口；Shell、WSL 走本地会话。
+    /// 已实现：SSH / Telnet / SFTP / FTP（文件面板）/ VNC（远程桌面）/ RDP（系统远程桌面）与串口；Shell、WSL 走本地会话。
     /// </summary>
     public static IReadOnlyList<SessionProtocol> All { get; } =
     [
@@ -49,7 +50,7 @@ public sealed record SessionProtocol(
         new(Telnet, "Telnet", true, 23, HostPortUserPassword),
         new("rsh", "Rsh", false, 514, []),
         new("xdmcp", "Xdmcp", false, 177, []),
-        new("rdp", "RDP", false, 3389, []),
+        new("rdp", "RDP", true, 3389, [SessionField.Host, SessionField.Port, SessionField.Username]),
         new(Vnc, "VNC", true, 5900, [SessionField.Host, SessionField.Port, SessionField.Password]),
         // FTP 与 SFTP 共用双栏文件面板，可自定义端口
         new(Ftp, "FTP", true, 21, HostPortUserPassword),

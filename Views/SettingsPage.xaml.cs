@@ -113,6 +113,7 @@ public sealed partial class SettingsPage : Page
             BackendComboBox.SelectedItem = TerminalBackend.FromName(settings.Backend);
 
             ConfirmPasteSwitch.IsOn = settings.ConfirmMultilinePaste;
+            CopyOnSelectSwitch.IsOn = settings.CopyOnSelect;
             HideOnMinimizeSwitch.IsOn = settings.HideOnMinimize;
         }
         finally
@@ -314,6 +315,17 @@ public sealed partial class SettingsPage : Page
         }
 
         App.Settings.Current.ConfirmMultilinePaste = ConfirmPasteSwitch.IsOn;
+        ApplyAndSave();
+    }
+
+    private void OnCopyOnSelectToggled(object sender, RoutedEventArgs e)
+    {
+        if (_loading)
+        {
+            return;
+        }
+
+        App.Settings.Current.CopyOnSelect = CopyOnSelectSwitch.IsOn;
         ApplyAndSave();
     }
 

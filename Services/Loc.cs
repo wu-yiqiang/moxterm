@@ -47,6 +47,7 @@ public sealed class Loc : INotifyPropertyChanged
 
     // 主窗口与终端工具栏
     public string NavTerminal => T("会话", "Sessions");
+    public string NavShortcuts => T("快捷键", "Shortcuts");
 
     public string ProtocolComingSoon(string protocol) => T(
         $"{protocol} 会话将在后续版本提供。",
@@ -66,6 +67,8 @@ public sealed class Loc : INotifyPropertyChanged
     public string RevealPassword => T("显示密码", "Reveal password");
     public string HidePassword => T("隐藏密码", "Hide password");
     public string SshNotesLabel => T("备注", "Notes");
+    public string SessionGroupLabel => T("分组", "Group");
+    public string SessionGroupPlaceholder => T("可选，用于给会话归类", "Optional, groups saved sessions");
     public string Connect => T("连接", "Connect");
     public string SshSaveSession => T("保存此会话", "Save this session");
 
@@ -160,6 +163,14 @@ public sealed class Loc : INotifyPropertyChanged
     public string VncConnectFailed => T("连接失败：", "Connection failed: ");
     public string VncDisconnected => T("连接已断开：", "Disconnected: ");
 
+    // RDP（经系统远程桌面客户端打开）
+    public string RdpClipboard => T("共享剪贴板", "Share clipboard");
+    public string RdpAllDrives => T("共享所有本地驱动器", "Share all local drives");
+    public string RdpDrivesLabel => T("共享驱动器", "Shared drives");
+    public string RdpDriveHint => T("RDP 按驱动器共享，无法只共享单个文件夹。", "RDP shares whole drives; individual folders can't be shared.");
+    public string RdpExternalHint => T("RDP 会话将在系统远程桌面窗口中打开。", "RDP sessions open in the Remote Desktop window.");
+    public string RdpLaunchFailed => T("无法启动远程桌面客户端：", "Failed to launch Remote Desktop: ");
+
     // 窗口
     public string GroupWindow => T("窗口", "Window");
     public string HideOnMinimize => T("最小化时在通知区域隐藏终端", "Hide the terminal in the notification area when minimized");
@@ -170,6 +181,10 @@ public sealed class Loc : INotifyPropertyChanged
     public string TrayExit => T("退出", "Exit");
 
     // 输入
+    public string CopyOnSelect => T("选中即复制", "Copy on select");
+    public string CopyOnSelectDesc => T(
+        "在终端中拖选文本后自动复制到剪贴板，无需再按复制快捷键",
+        "Automatically copy selected terminal text to the clipboard without pressing a shortcut");
     public string ConfirmPaste => T("粘贴多行文本时确认", "Confirm multi-line paste");
     public string ConfirmPasteDesc => T(
         "剪贴板中包含换行时，粘贴前先弹窗确认，避免误执行多行命令",
@@ -186,7 +201,6 @@ public sealed class Loc : INotifyPropertyChanged
     public string SchemeDark => T("深色", "Dark");
     public string SchemeLight => T("浅色", "Light");
     public string SchemeGreen => T("复古绿", "Retro green");
-    public string SchemeFollow => T("跟随应用主题", "Follow app theme");
     public string CursorBlock => T("方块", "Block");
     public string CursorUnderline => T("下划线", "Underline");
     public string CursorBar => T("竖线", "Bar");
@@ -207,6 +221,19 @@ public sealed class Loc : INotifyPropertyChanged
     public string SessionExited(int exitCode) => T(
         $"[进程已退出，代码 {exitCode}]",
         $"[Process exited with code {exitCode}]");
+    public string OpenLinkHint => T("打开链接", "Open link");
+
+    // 终端右键菜单（分屏）
+    public string Copy => T("复制", "Copy");
+    public string SplitLeftRight => T("左右分屏", "Split left/right");
+    public string SplitTopBottom => T("上下分屏", "Split top/bottom");
+    public string ClosePane => T("关闭此分屏", "Close pane");
+    public string KeyboardShortcuts => T("键盘快捷键", "Keyboard shortcuts");
+    public string ShortcutCopy => T("复制选中内容", "Copy selection");
+    public string ShortcutInterrupt => T("中断当前命令", "Interrupt current command");
+    public string ShortcutPaste => T("粘贴", "Paste");
+    public string ShortcutClear => T("清屏", "Clear screen");
+
     public string PasteTitle => T("粘贴多行文本", "Paste multiple lines");
     public string PasteContent(int lines) => T(
         $"剪贴板中包含 {lines} 行文本，确认要粘贴到终端吗？",

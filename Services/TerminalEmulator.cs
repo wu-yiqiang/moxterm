@@ -46,6 +46,9 @@ public sealed class TerminalEmulator
 
     public int Rows => _rows;
 
+    /// <summary>回滚缓冲与当前屏幕的总行数，供按行扫描（如链接下划线）使用。</summary>
+    public int LineCount => _scrollback.Count + _rows;
+
     /// <summary>回滚缓冲的最大行数，超出后丢弃最旧的行。</summary>
     public int MaxScrollback
     {
@@ -142,6 +145,26 @@ public sealed class TerminalEmulator
         }
 
         return builder.ToString();
+    }
+
+    /// <summary>
+    /// 取第 <paramref name="index"/> 行（从回滚缓冲顶部开始计数）的原始文本，
+    /// 不包含光标插入的字符。供链接命中测试使用。
+    /// </summary>
+    public string GetLineText(int index)
+    {
+        if (index < 0)
+        {
+            return string.Empty;
+        }
+
+        if (index < _scrollback.Count)
+        {
+            return _scrollback[index];
+        }
+
+        var row = index - _scrollback.Count;
+        return row < _rows ? GetRowText(row) : string.Empty;
     }
 
     /// <summary>逐字符喂入 Shell 输出。允许在任意位置分块，解析状态会跨调用保持。</summary>

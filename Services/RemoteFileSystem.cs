@@ -1,22 +1,26 @@
 namespace MoxTerm.Services;
 
-/// <summary>文件项：本地与远程列表共用，供文件面板绑定。</summary>
-public sealed record FileEntry(string Name, string FullPath, bool IsDirectory, long Size, DateTime Modified)
+/// <summary>把字节数格式化成人类可读文本，本地与远程文件列表共用。</summary>
+internal static class FileSize
 {
-    /// <summary>目录名带尾随斜杠，便于与文件区分。</summary>
-    public string DisplayName => IsDirectory ? $"{Name}/" : Name;
-
-    public string SizeText => IsDirectory ? string.Empty : FormatSize(Size);
-
-    public string ModifiedText => Modified == default ? string.Empty : Modified.ToString("yyyy-MM-dd HH:mm");
-
-    private static string FormatSize(long bytes) => bytes switch
+    public static string Format(long bytes) => bytes switch
     {
         < 1024 => $"{bytes} B",
         < 1024 * 1024 => $"{bytes / 1024.0:0.#} KB",
         < 1024L * 1024 * 1024 => $"{bytes / (1024.0 * 1024):0.#} MB",
         _ => $"{bytes / (1024.0 * 1024 * 1024):0.##} GB",
     };
+}
+
+/// <summary>文件项：本地与远程列表共用，供文件面板绑定。</summary>
+public sealed record FileEntry(string Name, string FullPath, bool IsDirectory, long Size, DateTime Modified)
+{
+    /// <summary>目录名带尾随斜杠，便于与文件区分。</summary>
+    public string DisplayName => IsDirectory ? $"{Name}/" : Name;
+
+    public string SizeText => IsDirectory ? string.Empty : FileSize.Format(Size);
+
+    public string ModifiedText => Modified == default ? string.Empty : Modified.ToString("yyyy-MM-dd HH:mm");
 }
 
 /// <summary>

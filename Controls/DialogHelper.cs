@@ -43,7 +43,7 @@ public static class DialogHelper
         }
     }
 
-    private static T? FindVisualChild<T>(DependencyObject parent, string name) where T : FrameworkElement
+    public static T? FindVisualChild<T>(DependencyObject parent, string name) where T : FrameworkElement
     {
         var count = VisualTreeHelper.GetChildrenCount(parent);
 

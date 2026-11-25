@@ -261,7 +261,7 @@ public sealed class HttpFileServer : IFileServer
             var name = entry.Name + (isDirectory ? "/" : string.Empty);
             var href = basePath + Uri.EscapeDataString(entry.Name) + (isDirectory ? "/" : string.Empty);
             var size = entry is FileInfo file
-                ? FormatSize(file.Length)
+                ? FileSize.Format(file.Length)
                 : string.Empty;
             var modified = entry.LastWriteTime.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture);
 
@@ -272,14 +272,6 @@ public sealed class HttpFileServer : IFileServer
         builder.Append("</table></body></html>");
         return builder.ToString();
     }
-
-    private static string FormatSize(long bytes) => bytes switch
-    {
-        < 1024 => $"{bytes} B",
-        < 1024 * 1024 => $"{bytes / 1024.0:F1} KB",
-        < 1024L * 1024 * 1024 => $"{bytes / (1024.0 * 1024):F1} MB",
-        _ => $"{bytes / (1024.0 * 1024 * 1024):F2} GB",
-    };
 }
 
 /// <summary>

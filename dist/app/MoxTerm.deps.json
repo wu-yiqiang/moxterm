@@ -12,6 +12,7 @@
           "FluentFTP": "55.1.0",
           "Microsoft.WindowsAppSDK": "1.8.250916003",
           "SSH.NET": "2026.0.1",
+          "SharpPcap": "6.3.1",
           "System.IO.Ports": "10.0.0",
           "System.Security.Cryptography.ProtectedData": "10.0.0",
           "Microsoft.Web.WebView2.Core.Projection": "1.0.3179.45",
@@ -1030,6 +1031,27 @@
           }
         }
       },
+      "PacketDotNet/1.4.8": {
+        "runtime": {
+          "lib/net9.0/PacketDotNet.dll": {
+            "assemblyVersion": "1.4.8.0",
+            "fileVersion": "1.4.8.0",
+            "localPath": "PacketDotNet.dll"
+          }
+        }
+      },
+      "SharpPcap/6.3.1": {
+        "dependencies": {
+          "PacketDotNet": "1.4.8"
+        },
+        "runtime": {
+          "lib/net8.0/SharpPcap.dll": {
+            "assemblyVersion": "6.3.1.0",
+            "fileVersion": "6.3.1.0",
+            "localPath": "SharpPcap.dll"
+          }
+        }
+      },
       "SSH.NET/2026.0.1": {
         "dependencies": {
           "BouncyCastle.Cryptography": "2.7.0",
@@ -1178,6 +1200,20 @@
       "sha512": "sha512-6oskwUluqlDGwUcwYlY3GWTMLajyjh9e790SmWzCCMDRV6sunYbqp7DkiSLzn8nhgSbGvmj6zG92JnkYRlbrXw==",
       "path": "microsoft.windowsappsdk.winui/1.8.250906003",
       "hashPath": "microsoft.windowsappsdk.winui.1.8.250906003.nupkg.sha512"
+    },
+    "PacketDotNet/1.4.8": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-j4C4QaJmaPCk0KXsIdsZqmBteKWj5znXBmfbPpu48rE5SW2xwXKVlRf7C3g7VM9aZqMHIQedApEuC71nNX5PaQ==",
+      "path": "packetdotnet/1.4.8",
+      "hashPath": "packetdotnet.1.4.8.nupkg.sha512"
+    },
+    "SharpPcap/6.3.1": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-EWclXz+QdffBRppFR7GDBLyKiAz045RGvu4t4gcMGocVMEq6dRfCnAEx7Ep6qxcPPhH2kz13Y8FqBaHZhsh3Pg==",
+      "path": "sharppcap/6.3.1",
+      "hashPath": "sharppcap.6.3.1.nupkg.sha512"
     },
     "SSH.NET/2026.0.1": {
       "type": "package",

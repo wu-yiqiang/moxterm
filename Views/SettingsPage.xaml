@@ -296,6 +296,16 @@
                 <Border Style="{StaticResource SettingsCardStyle}">
                     <StackPanel>
                         <controls:SettingsRow
+                            Title="{x:Bind Loc.CopyOnSelect, Mode=OneWay}"
+                            Description="{x:Bind Loc.CopyOnSelectDesc, Mode=OneWay}"
+                            Glyph="Copy">
+                            <ToggleSwitch
+                                x:Name="CopyOnSelectSwitch"
+                                MinWidth="0"
+                                Toggled="OnCopyOnSelectToggled" />
+                        </controls:SettingsRow>
+
+                        <controls:SettingsRow
                             Title="{x:Bind Loc.ConfirmPaste, Mode=OneWay}"
                             Description="{x:Bind Loc.ConfirmPasteDesc, Mode=OneWay}"
                             DividerVisibility="Collapsed"
