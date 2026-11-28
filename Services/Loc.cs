@@ -251,6 +251,8 @@ public sealed class Loc : INotifyPropertyChanged
     public string NavNetScan => T("网络扫描", "Network scanner");
     public string NavPortScan => T("端口扫描", "Ports scanner");
     public string NavPacketCapture => T("网络抓包", "Packet capture");
+    public string NavDiagnostics => T("网络诊断", "Network diagnostics");
+    public string NavPingTraceroute => T("连通与追踪", "Ping / Traceroute");
     public string NavXServer => T("X Server", "X Server");
     public string ComingSoon => T("即将推出", "Coming soon");
     public string PlannedFeatures => T("规划中的能力", "Planned capabilities");
@@ -401,6 +403,44 @@ public sealed class Loc : INotifyPropertyChanged
     public string PortScanColPort => T("端口", "Port");
     public string PortScanColService => T("服务", "Service");
     public string PortScanColBanner => T("标识", "Banner");
+
+    // 网络诊断页面（Ping / Traceroute）
+    public string DiagSubtitle => T(
+        "检测目标主机的连通性与网络路径：连通性检测统计延迟与丢包，路由追踪逐跳显示路由。",
+        "Check reachability and the network path: Ping reports latency and loss, Traceroute lists every hop.");
+    public string DiagHostLabel => T("目标主机", "Target host");
+    public string DiagHostPlaceholder => T("主机名或 IP", "Hostname or IP");
+    public string DiagPing => T("连通性检测", "Ping");
+    public string DiagTraceroute => T("路由追踪", "Traceroute");
+    public string DiagStop => T("停止", "Stop");
+    public string DiagClear => T("清空", "Clear");
+    public string DiagHostRequired => T(
+        "请填写要诊断的主机名或 IP。",
+        "Enter a hostname or IP to diagnose.");
+    public string DiagRunning(string mode, string host) => T(
+        $"正在对 {host} 执行 {mode}…",
+        $"Running {mode} against {host}…");
+    public string DiagPingReply(string address, int bytes, long milliseconds, int ttl) => T(
+        $"来自 {address} 的回复：字节={bytes} 时间={milliseconds}ms TTL={ttl}",
+        $"Reply from {address}: bytes={bytes} time={milliseconds}ms TTL={ttl}");
+    public string DiagTimedOut => T("请求超时。", "Request timed out.");
+    public string DiagRequestFailed(string status) => T($"请求失败：{status}", $"Request failed: {status}");
+    public string DiagPingSummary(int sent, int received, int lossPercent, long min, long average, long max) => T(
+        $"已发送 {sent}，已接收 {received}，丢失 {lossPercent}%；最短 {min}ms，平均 {average}ms，最长 {max}ms。",
+        $"Sent {sent}, received {received}, lost {lossPercent}%; min {min}ms, avg {average}ms, max {max}ms.");
+    public string DiagPingNoReply => T(
+        "全部请求均未收到回复，目标可能不可达。",
+        "No replies received; the target may be unreachable.");
+    public string DiagTracerouteHeader(string host) => T(
+        $"正在跟踪到 {host} 的路由，最多 30 跳…",
+        $"Tracing route to {host} over a maximum of 30 hops…");
+    public string DiagFinished => T("诊断完成。", "Diagnosis finished.");
+    public string DiagCancelled => T("诊断已停止。", "Diagnosis stopped.");
+    public string DiagFailed(string message) => T($"诊断失败：{message}", $"Diagnosis failed: {message}");
+    public string DiagFailedTitle => T("无法诊断", "Cannot diagnose");
+    public string DiagEmpty => T(
+        "尚未诊断。填写目标主机后点击“连通性检测”或“路由追踪”。",
+        "No diagnosis yet. Enter a host and click Ping or Traceroute.");
 
     // 网络扫描页面
     public string NetScanSubtitle => T(

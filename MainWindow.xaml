@@ -100,6 +100,22 @@
                 </NavigationViewItem>
 
                 <NavigationViewItem
+                    Content="{x:Bind Loc.NavDiagnostics, Mode=OneWay}"
+                    SelectsOnInvoked="False">
+                    <NavigationViewItem.Icon>
+                        <!-- Diagnostic：心跳曲线 -->
+                        <FontIcon Glyph="&#xE9D9;" />
+                    </NavigationViewItem.Icon>
+                    <NavigationViewItem.MenuItems>
+                        <NavigationViewItem Content="{x:Bind Loc.NavPingTraceroute, Mode=OneWay}" Tag="diag">
+                            <NavigationViewItem.Icon>
+                                <FontIcon Glyph="&#xE774;" />
+                            </NavigationViewItem.Icon>
+                        </NavigationViewItem>
+                    </NavigationViewItem.MenuItems>
+                </NavigationViewItem>
+
+                <NavigationViewItem
                     Content="{x:Bind Loc.GroupServers, Mode=OneWay}"
                     SelectsOnInvoked="False">
                     <NavigationViewItem.Icon>
